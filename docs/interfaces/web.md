@@ -26,10 +26,21 @@ Rebuild the frontend (`npm run build`) after you pull updates that change `front
 ## Using it
 
 - **Chat:** type a message and press **Enter** (**Shift+Enter** for a new line). Replies appear as they're written, with a status line while Butler works ("Searching your mail…").
-- **Conversations:** **+ New chat** starts a fresh conversation. Earlier ones are listed in the sidebar; the **×** deletes one.
+- **Conversations:** **+ New chat** starts a fresh conversation. Earlier ones are listed in the sidebar. **Double-click** a title to rename it; the **×** deletes it.
 - **Email picker:** when you ask to open an email, Butler shows a list. Click one to read it, or **Cancel**.
 - **Approvals:** before Butler places an order, changes an address or clears your cart, it shows a card with the details and **Approve / Reject**.
 - **Integrations:** shows whether Gmail and Swiggy are connected, how long the Swiggy login has left, and a **Connect** or **Reconnect** button.
+
+## Where chats are stored
+
+| What | Where | After a restart |
+|---|---|---|
+| The sidebar list and every chat's messages | SQLite at `data/butler.db` | ✅ Still there, on every device and browser |
+| Butler's working memory (tool results, an open picker or approval) | RAM | ❌ Starts fresh |
+
+So after restarting Butler you can open and read any old chat, but Butler doesn't remember its earlier context; it continues from your next message. A new chat is only saved once you send its first message, so empty chats never pile up.
+
+To back up your chat history, copy `data/butler.db`. To wipe it, stop Butler and delete the file.
 
 ## Connecting accounts from the browser
 
@@ -69,8 +80,10 @@ The UI is a thin client over a small JSON API. FastAPI serves interactive docs a
 |---|---|---|
 | `POST` | `/api/chat/messages` | Send a message; the reply streams back as Server-Sent Events |
 | `POST` | `/api/chat/resume` | Answer a picker or approval; also streams |
-| `GET` | `/api/chat/threads/{id}` | Conversation history, plus any open question |
-| `DELETE` | `/api/chat/threads/{id}` | Clear a conversation |
+| `GET` | `/api/chat/threads` | The sidebar list (newest first) |
+| `GET` | `/api/chat/threads/{id}` | Saved messages, plus any open question |
+| `PATCH` | `/api/chat/threads/{id}` | Rename: `{"title": "..."}` |
+| `DELETE` | `/api/chat/threads/{id}` | Delete a conversation and its messages |
 | `GET` | `/api/integrations` | Connection status |
 | `POST` | `/api/integrations/{name}/connect` | Start a login (`gmail`, `swiggy`) |
 | `POST` | `/api/integrations/reload` | Reload the agent's tools |

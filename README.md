@@ -70,7 +70,8 @@ The full walkthrough is in **[Getting started](docs/getting-started.md)**.
 - **Integrations:** [Gmail](docs/integrations/gmail.md) · [Swiggy](docs/integrations/swiggy.md)
 - **[Configuration](docs/configuration.md):** every `.env` setting
 - **[Troubleshooting](docs/troubleshooting.md):** common problems and fixes
-- **[Architecture](docs/architecture.md):** how it works, and how to add a new integration
+- **[Architecture](docs/architecture.md):** the overview of how it works
+- **[How Butler works (internals)](docs/internals/README.md):** [memory](docs/internals/memory.md) · [the agent](docs/internals/agent.md) · [tools](docs/internals/tools.md) · [adding tools](docs/internals/adding-tools.md) · [human in the loop](docs/internals/human-in-the-loop.md) · [streaming](docs/internals/streaming.md) · [auth and security](docs/internals/auth-and-security.md) · [request lifecycle](docs/internals/request-lifecycle.md)
 
 ## Commands
 
@@ -89,21 +90,21 @@ After `pip install -e .` you can also write `butler web`, `butler chat`, and so 
 
 Butler acts on **your** accounts, so treat it like a password manager:
 
-- **Secrets stay local.** `.env` and `secrets/` are git-ignored and never leave your machine.
+- **Secrets stay local.** `.env`, `secrets/` and `data/` (your saved chats) are git-ignored and never leave your machine.
 - **The web UI is local by default.** It only listens on `127.0.0.1`. If you expose it, set `BUTLER_WEB_PASSWORD` and put HTTPS in front of it.
 - **Lock down Telegram.** Set `TELEGRAM_ALLOWED_USER_IDS`, or anyone who finds your bot can read your mail.
 - **Risky actions need approval.** Orders, address changes and clearing the cart always ask first.
 
 ## Project status and limitations
 
-- **Memory is in-process:** restarting clears conversations.
+- **Agent memory is in-process:** web chats are saved (sidebar and transcripts survive restarts), but after a restart Butler doesn't remember the earlier context of a chat. Telegram and terminal chats aren't saved.
 - **Gmail is read-only:** no sending or deleting.
 - **Swiggy:** India only and Food only for now. Logins last 5 days (a Swiggy limit).
 - **Model choice:** works with `gpt-4o-mini`. `gpt-4.1-mini` is more reliable for multi-step flows like building a cart (set `OPENAI_MODEL`).
 
 ## Contributing
 
-Issues and pull requests are welcome. See [Architecture](docs/architecture.md) for how the code is organised and how to add an integration.
+Issues and pull requests are welcome. See [Architecture](docs/architecture.md) for how the code is organised, and [Adding tools](docs/internals/adding-tools.md) for step-by-step recipes for new tools and integrations.
 
 ## License
 

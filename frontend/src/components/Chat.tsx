@@ -31,11 +31,12 @@ const EXAMPLES = [
 
 interface Props {
   threadId: string
-  onFirstMessage: (text: string) => void
+  onSent: (text: string) => void
+  onTurnFinished: () => void
   onUnauthorized: () => void
 }
 
-export function Chat({ threadId, onFirstMessage, onUnauthorized }: Props) {
+export function Chat({ threadId, onSent, onTurnFinished, onUnauthorized }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [streaming, setStreaming] = useState('')
   const [status, setStatus] = useState<string | null>(null)
@@ -119,11 +120,12 @@ export function Chat({ threadId, onFirstMessage, onUnauthorized }: Props) {
       flush()
       setStatus(null)
       setBusy(false)
+      onTurnFinished()
     }
   }
 
   const send = (text: string) => {
-    if (!messages.length) onFirstMessage(text)
+    onSent(text)
     setMessages((all) => [...all, { role: 'user', content: text }])
     setPending(null) // sending a new message cancels an open question
     void run((onEvent) => api.sendMessage(threadId, text, onEvent))

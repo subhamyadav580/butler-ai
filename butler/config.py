@@ -46,6 +46,11 @@ WEB_PASSWORD = os.getenv("BUTLER_WEB_PASSWORD", "")
 
 FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
 
+# --- Storage -----------------------------------------------------------------
+# Web UI chat list + transcripts (SQLite). Agent memory stays in RAM.
+DATA_DIR = Path(os.getenv("BUTLER_DATA_DIR", ROOT_DIR / "data"))
+DATABASE_PATH = Path(os.getenv("BUTLER_DATABASE_PATH", DATA_DIR / "butler.db"))
+
 
 def check_config(needs_telegram=False):
     """Fail fast with a readable message instead of a traceback."""

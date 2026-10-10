@@ -1,4 +1,4 @@
-import type { ChatMessage, IntegrationStatus, InterruptPayload, StreamEvent } from './types'
+import type { ChatMessage, IntegrationStatus, InterruptPayload, StreamEvent, Thread } from './types'
 
 const TOKEN_KEY = 'butler.token'
 
@@ -56,7 +56,15 @@ export const getHistory = (threadId: string) =>
     `/api/chat/threads/${encodeURIComponent(threadId)}`,
   )
 
-export const resetThread = (threadId: string) =>
+export const listThreads = () => request<{ threads: Thread[] }>('/api/chat/threads')
+
+export const renameThread = (threadId: string, title: string) =>
+  request<Thread>(`/api/chat/threads/${encodeURIComponent(threadId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ title }),
+  })
+
+export const deleteThread = (threadId: string) =>
   request<{ ok: boolean }>(`/api/chat/threads/${encodeURIComponent(threadId)}`, { method: 'DELETE' })
 
 /** POST and read the Server-Sent Events stream, calling onEvent per event. */

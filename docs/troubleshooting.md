@@ -53,8 +53,8 @@ Something else is using the port. Set `BUTLER_WEB_PORT=8080` in `.env`.
 **"Connect" does nothing visible**
 The login window opens in a browser **on the machine running Butler**. On a remote server, log in on your laptop instead and copy `secrets/` over.
 
-**Conversations disappeared**
-Memory is kept in the running process. Restarting the server, or reconnecting Swiggy (which reloads the agent), clears it.
+**Butler forgot what we talked about after a restart**
+Expected. Your chats and their messages are saved (`data/butler.db`), but Butler's working memory is kept in the running process. Restarting, or reconnecting Swiggy (which reloads the agent), clears it, so Butler continues an old chat from your next message.
 
 ## Telegram
 

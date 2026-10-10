@@ -37,6 +37,8 @@ Real environment variables take priority over `.env`.
 
 | Variable | Default | Description |
 |---|---|---|
+| `BUTLER_DATA_DIR` | `./data` | Folder for the chat database (`butler.db`) |
+| `BUTLER_DATABASE_PATH` | `<data>/butler.db` | The web UI's SQLite database of chats and messages |
 | `BUTLER_SECRETS_DIR` | `./secrets` | Folder for OAuth clients and tokens |
 | `GOOGLE_CLIENT_SECRET_FILE` | `<secrets>/google_client_secret.json` | Your Google OAuth client file |
 

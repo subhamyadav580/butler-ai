@@ -26,6 +26,22 @@ class ResumeRequest(BaseModel):
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str
+    created_at: Optional[float] = None
+
+
+class Thread(BaseModel):
+    id: str
+    title: str
+    created_at: float
+    updated_at: float
+
+
+class ThreadsResponse(BaseModel):
+    threads: list[Thread]
+
+
+class RenameThreadRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
 
 
 class HistoryResponse(BaseModel):

@@ -41,7 +41,8 @@ export type StreamEvent =
 export interface Thread {
   id: string
   title: string
-  updatedAt: number
+  created_at: number
+  updated_at: number
 }
 
 export interface IntegrationStatus {

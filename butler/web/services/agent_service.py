@@ -6,7 +6,7 @@ Server-Sent Events.
 
 import asyncio
 
-from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage
+from langchain_core.messages import AIMessageChunk
 from langgraph.types import Command
 
 from butler.agent import build_graph, cancel_pending, pending_interrupt
@@ -89,24 +89,12 @@ class AgentService:
         yield {"type": "done", "content": "".join(text)}
 
     # ------------------------------------------------------------------
-    # History
+    # Agent memory (in RAM; lost on restart)
     # ------------------------------------------------------------------
 
-    def history(self, thread_id):
-        config = self._config(thread_id)
-        state = self.graph.get_state(config)
-        messages = []
-
-        for message in state.values.get("messages", []):
-            if isinstance(message, HumanMessage):
-                messages.append({"role": "user", "content": message.content})
-            elif isinstance(message, AIMessage) and message.content:
-                messages.append({"role": "assistant", "content": message.content})
-
-        return {
-            "messages": messages,
-            "pending": pending_interrupt(self.graph, config),
-        }
+    def pending(self, thread_id):
+        """The open question (picker/approval) for this thread, if any."""
+        return pending_interrupt(self.graph, self._config(thread_id))
 
     def reset(self, thread_id):
         self.graph.checkpointer.delete_thread(thread_id)

@@ -5,15 +5,19 @@ from fastapi import Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 
-from butler.web.dependencies import get_agent_service
+from butler.web.dependencies import get_chat_service
 from butler.web.schemas.chat import (
     ConfirmActionAnswer,
     HistoryResponse,
     PickEmailAnswer,
+    RenameThreadRequest,
     ResumeRequest,
     SendMessageRequest,
+    Thread,
+    ThreadsResponse,
 )
-from butler.web.services.agent_service import AgentService, InterruptMismatch
+from butler.web.services.agent_service import InterruptMismatch
+from butler.web.services.chat_service import ChatService, ThreadNotFound
 
 log = logging.getLogger(__name__)
 
@@ -43,21 +47,21 @@ def _sse(events):
 
 async def send_message(
     request: SendMessageRequest,
-    agent: AgentService = Depends(get_agent_service),
+    chats: ChatService = Depends(get_chat_service),
 ):
-    return _sse(agent.send_message(request.thread_id, request.message))
+    return _sse(chats.send_message(request.thread_id, request.message))
 
 
 async def resume(
     request: ResumeRequest,
-    agent: AgentService = Depends(get_agent_service),
+    chats: ChatService = Depends(get_chat_service),
 ):
     try:
         answer = ANSWER_SCHEMAS[request.type].model_validate(request.answer)
     except ValidationError as error:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, error.errors())
 
-    events = agent.resume(request.thread_id, request.type, answer.model_dump())
+    events = chats.resume(request.thread_id, request.type, answer.model_dump())
 
     # Surface "nothing to resume" as 409 before the stream starts
     try:
@@ -76,16 +80,31 @@ async def resume(
     return _sse(replay())
 
 
+async def list_threads(chats: ChatService = Depends(get_chat_service)) -> ThreadsResponse:
+    return ThreadsResponse(threads=chats.list_threads())
+
+
 async def get_history(
     thread_id: str,
-    agent: AgentService = Depends(get_agent_service),
+    chats: ChatService = Depends(get_chat_service),
 ) -> HistoryResponse:
-    return HistoryResponse(**agent.history(thread_id))
+    return HistoryResponse(**chats.history(thread_id))
 
 
-async def reset_thread(
+async def rename_thread(
     thread_id: str,
-    agent: AgentService = Depends(get_agent_service),
+    request: RenameThreadRequest,
+    chats: ChatService = Depends(get_chat_service),
+) -> Thread:
+    try:
+        return Thread(**chats.rename(thread_id, request.title))
+    except ThreadNotFound:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Conversation not found")
+
+
+async def delete_thread(
+    thread_id: str,
+    chats: ChatService = Depends(get_chat_service),
 ):
-    agent.reset(thread_id)
+    chats.delete(thread_id)
     return {"ok": True}
