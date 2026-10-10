@@ -1,0 +1,11 @@
+# Pinned versions known to work. `pip install -e .` uses the ranges in pyproject.toml.
+langgraph==1.2.12
+langchain-core==1.6.5
+langchain-openai==1.6.6
+langchain-mcp-adapters==0.3.2
+mcp==1.30.0
+python-telegram-bot==22.8
+python-dotenv==1.2.4
+google-api-python-client==2.201.0
+google-auth-oauthlib==1.5.0
+google-auth-httplib2==0.4.4

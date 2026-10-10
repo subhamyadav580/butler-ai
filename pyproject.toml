@@ -1,0 +1,28 @@
+[project]
+name = "butler"
+version = "0.1.0"
+description = "A personal AI assistant for Gmail and Swiggy, on Telegram or the terminal, built with LangGraph."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=1.2",
+    "langchain-core>=1.6",
+    "langchain-openai>=1.6",
+    "langchain-mcp-adapters>=0.3",
+    "mcp>=1.30",
+    "python-telegram-bot>=22",
+    "python-dotenv>=1.0",
+    "google-api-python-client>=2.200",
+    "google-auth-oauthlib>=1.5",
+    "google-auth-httplib2>=0.4",
+]
+
+[project.scripts]
+butler = "butler.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["butler*"]
