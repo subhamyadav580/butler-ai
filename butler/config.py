@@ -36,6 +36,15 @@ TELEGRAM_ALLOWED_USER_IDS = _int_set(os.getenv("TELEGRAM_ALLOWED_USER_IDS"))
 # empty = every allowed user gets Swiggy
 TELEGRAM_OWNER_ID = int(os.getenv("TELEGRAM_OWNER_ID") or 0)
 
+# --- Swiggy ------------------------------------------------------------------
+# Which Swiggy services to load. Fewer services = fewer tools for the LLM to
+# choose from, which helps smaller models pick the right one.
+SWIGGY_SERVICES = {
+    s.strip().lower()
+    for s in os.getenv("SWIGGY_SERVICES", "food,instamart,dineout").split(",")
+    if s.strip()
+}
+
 # --- Web UI ----------------------------------------------------------------
 # Defaults to localhost only: the UI can read your Gmail and order on Swiggy
 WEB_HOST = os.getenv("BUTLER_WEB_HOST", "127.0.0.1")

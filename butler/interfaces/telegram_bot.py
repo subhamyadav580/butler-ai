@@ -164,7 +164,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• open a mail from LinkedIn\n"
     )
     if can_use_swiggy(update.effective_user):
-        examples += "• find biryani near my office on Swiggy\n"
+        examples += (
+            "• find biryani near my office on Swiggy\n"
+            "• order milk and bread on Instamart\n"
+            "• book a table for 2 tonight in Connaught Place\n"
+        )
 
     await update.message.reply_text(
         "Hi! Ask me anything, or about your Gmail — e.g.\n"

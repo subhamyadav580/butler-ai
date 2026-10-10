@@ -14,13 +14,27 @@ from .config import (
     REDIRECT_PORT,
     REDIRECT_URI,
     SCOPES,
-    SERVERS,
+    AUTH_SERVER_URL,
     TOKEN_FILE,
 )
 
 
 class SwiggyLoginRequired(Exception):
     """Raised when a Swiggy login is needed but we can't open a browser."""
+
+
+def is_login_error(error):
+    """True if this error (or one nested in an ExceptionGroup) means 'log in'."""
+    if isinstance(error, SwiggyLoginRequired):
+        return True
+    return any(is_login_error(e) for e in getattr(error, "exceptions", []))
+
+
+def describe_error(error):
+    """Innermost cause of a (possibly nested) MCP error, as one short line."""
+    while getattr(error, "exceptions", None):
+        error = error.exceptions[0]
+    return f"{type(error).__name__}: {error}"[:200]
 
 
 class FileTokenStorage(TokenStorage):
@@ -142,7 +156,7 @@ def make_auth(interactive=False):
 
 
     return OAuthClientProvider(
-        server_url=SERVERS["food"],
+        server_url=AUTH_SERVER_URL,
         client_metadata=OAuthClientMetadata(
             client_name=CLIENT_NAME,
             redirect_uris=[REDIRECT_URI],

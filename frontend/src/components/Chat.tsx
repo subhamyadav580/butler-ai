@@ -12,20 +12,38 @@ const TOOL_LABELS: Record<string, string> = {
   read_email: 'Reading the email',
   count_unread: 'Counting unread mail',
   inbox_overview: 'Checking your inbox',
-  get_addresses: 'Loading your Swiggy addresses',
-  search_restaurants: 'Searching restaurants',
-  search_menu: 'Searching dishes',
-  get_restaurant_menu: 'Loading the menu',
-  update_food_cart: 'Updating your cart',
-  get_food_cart: 'Loading your cart',
-  place_food_order: 'Placing the order',
-  track_food_order: 'Tracking your order',
+  // Swiggy Food
+  food_get_addresses: 'Loading your Swiggy addresses',
+  food_search_restaurants: 'Searching restaurants',
+  food_search_menu: 'Searching dishes',
+  food_get_restaurant_menu: 'Loading the menu',
+  food_update_food_cart: 'Updating your cart',
+  food_get_food_cart: 'Loading your cart',
+  food_place_food_order: 'Placing the order',
+  food_track_food_order: 'Tracking your order',
+  // Swiggy Instamart
+  instamart_get_addresses: 'Loading your Swiggy addresses',
+  instamart_search_products: 'Searching Instamart',
+  instamart_your_go_to_items: 'Loading your usual items',
+  instamart_get_cart: 'Loading your Instamart cart',
+  instamart_update_cart: 'Updating your Instamart cart',
+  instamart_checkout: 'Placing the Instamart order',
+  instamart_track_order: 'Tracking your order',
+  // Swiggy Dineout
+  dineout_get_saved_locations: 'Loading your locations',
+  dineout_search_restaurants_dineout: 'Finding restaurants',
+  dineout_get_restaurant_details: 'Loading restaurant details',
+  dineout_get_available_slots: 'Checking available tables',
+  dineout_book_table: 'Booking your table',
+  dineout_get_booking_status: 'Checking your booking',
 }
 
 const EXAMPLES = [
   'How many unread mails do I have in Promotions?',
   'Open a mail from LinkedIn',
   'Find veg biryani near my office on Swiggy',
+  'Order milk and bread on Instamart',
+  'Book a table for 2 tonight in Connaught Place',
   "What's 18% of 2,450?",
 ]
 

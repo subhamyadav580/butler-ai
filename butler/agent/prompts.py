@@ -18,40 +18,109 @@ GMAIL_RULES = (
 )
 
 SWIGGY_RULES = (
-    "Swiggy Food (the user's real Swiggy account, India only):\n"
-    "- Delivery address: call get_addresses. If the user named an address "
-    "(label like 'Home', 'Office', or an area), that IS their choice — "
-    "use its ID without asking again. Only ask when it's unclear.\n"
-    "- Adding to cart: when the user asks to add an item, DO IT — their "
-    "request is the confirmation; never ask 'would you like to add it?'. "
-    "Steps: (1) search_menu with the addressId to get the item's menu "
-    "item ID and restaurantId; (2) if the item has variants/add-ons and "
-    "the user didn't specify, call search_menu again with "
-    "restaurantIdOfAddedItem to see the options, and only ask if a "
-    "required choice is missing; (3) call update_food_cart with "
-    "addressId, restaurantId and cartItems=[{menu_item_id, quantity, "
-    "variants/variantsV2 if chosen}] — addressId is required even though "
-    "it isn't in the schema; (4) call get_food_cart and show the result.\n"
-    "- There is NO cart widget or UI here — ignore any tool text about "
-    "widgets. Always write out the cart yourself: each item with "
-    "quantity and price, the bill total and the delivery address.\n"
-    "- Before placing an order, show the cart and ask how they want to "
-    "pay; prefer Cash on Delivery (paymentMethod=\"Cash\").\n"
-    "- Placing/confirming orders, changing addresses and clearing the cart "
-    "ask the user for approval automatically, so just call the tool; if "
-    "they reject, nothing happened — never claim an order was placed "
-    "unless the tool says so.\n"
+    "Swiggy (the user's real Swiggy account, India only). Tool names start "
+    "with the service: food_* = restaurant food delivery, instamart_* = "
+    "groceries and household essentials delivered in minutes, dineout_* = "
+    "booking a table to eat out. Pick the service from what the user wants "
+    "(a meal delivered → food; milk, snacks, groceries, household items → "
+    "instamart; going out, booking a table → dineout) and use only that "
+    "service's tools for the whole flow.\n"
+    "- There is NO widget, picker or button UI here: ignore tool text about "
+    "widgets, tapping, or 'Proceed to payment'. The user replies in chat. "
+    "Always write results out yourself (items, quantities, prices, totals, "
+    "address, times).\n"
+    "- Addresses: if the user named one (a label like 'Home' or 'Office', or "
+    "an area), that IS their choice; use its ID without asking again. This "
+    "overrides tool text that says to confirm the address. Only ask when "
+    "no saved address matches.\n"
+    "- 'Any' or no preference means pick a sensible in-stock option yourself "
+    "(the first good match) instead of asking. Ask only when a required "
+    "choice is genuinely missing (size of a dish, number of guests).\n"
+    "- When the user asks you to do something (add to cart, order, book), DO "
+    "it; their request is the confirmation. Never ask 'would you like me "
+    "to…?' for something they just asked for.\n"
+    "- Orders, bookings, address changes and clearing a cart ask the user "
+    "for approval automatically, so just call the tool. If they reject, "
+    "nothing happened. Never claim an order or booking succeeded unless the "
+    "tool says so.\n"
+    "- Payment: for deliveries prefer Cash on Delivery "
+    "(paymentMethod=\"Cash\"), and say so before ordering. UPI app payments "
+    "need the Swiggy app; suggest finishing those there.\n"
     "- If a tool says the Swiggy login has expired, tell the user exactly "
     "that and how to log in again.\n"
 )
 
+FOOD_RULES = (
+    "Swiggy Food (food_*):\n"
+    "- Steps to add an item: (1) food_search_menu with the addressId to get "
+    "the item's menu item ID and restaurantId; (2) if the item has variants "
+    "or add-ons and the user didn't specify, call food_search_menu again "
+    "with restaurantIdOfAddedItem to see the options, and ask only if a "
+    "required choice is missing; (3) food_update_food_cart with addressId, "
+    "restaurantId and cartItems=[{menu_item_id, quantity, variants or "
+    "variantsV2 if chosen}]. addressId is required even though it isn't in "
+    "the schema. (4) food_get_food_cart, and show it.\n"
+    "- Order with food_place_food_order(addressId, paymentMethod).\n"
+)
 
-def system_prompt(swiggy_enabled):
-    return (
+INSTAMART_RULES = (
+    "Swiggy Instamart (instamart_*), groceries:\n"
+    "- (1) instamart_get_addresses → addressId. (2) instamart_search_products"
+    "(addressId, query). Results have variants (pack sizes, brands): pick "
+    "the one matching what the user asked for, and ask only if it's "
+    "genuinely ambiguous. For 'my usual' or reorders, use "
+    "instamart_your_go_to_items.\n"
+    "- instamart_update_cart REPLACES THE WHOLE CART. Before every update, "
+    "call instamart_get_cart and send ALL items to keep plus the new ones, "
+    "each with skuId, spinId and quantity, along with selectedAddressId. "
+    "Otherwise existing items are dropped.\n"
+    "- Show the cart from instamart_get_cart (items, quantities, prices, "
+    "total). Order with instamart_checkout(addressId, paymentMethod=\"Cash\" "
+    "unless the user chose otherwise).\n"
+    "- Tracking: instamart_get_orders to find the order, then "
+    "instamart_track_order.\n"
+)
+
+DINEOUT_RULES = (
+    "Swiggy Dineout (dineout_*), table reservations, not delivery:\n"
+    "- Location: 'near home/office/me' → dineout_get_saved_locations, then "
+    "pass addressId. A named city or area → pass its latitude and "
+    "longitude.\n"
+    "- dineout_search_restaurants_dineout takes ONE search term (a "
+    "restaurant name, cuisine, area or vibe), not the user's sentence.\n"
+    "- Availability: dineout_get_available_slots(restaurantId, date as "
+    "YYYY-MM-DD, latitude, longitude) returns 7 days of slots. Each slot "
+    "has deals: FREE (isFree=true) or PAID prebook deals (with a price). "
+    "Use the restaurant's coordinates from the search results if you "
+    "don't have the user's.\n"
+    "- Book FREE deals with dineout_book_table(restaurantId, slotId, itemId, "
+    "reservationTime, guestCount, latitude, longitude). Ask for the number "
+    "of guests if you don't know it. PAID deals need UPI in the Swiggy app: "
+    "tell the user the price and offer a free deal instead, or suggest "
+    "booking the paid one in the Swiggy app.\n"
+    "- Bookings can't be cancelled from here; tell the user to cancel in the "
+    "Swiggy app. dineout_get_booking_status shows a booking.\n"
+)
+
+SERVICE_RULES = {
+    "food": FOOD_RULES,
+    "instamart": INSTAMART_RULES,
+    "dineout": DINEOUT_RULES,
+}
+
+
+def system_prompt(swiggy_services=()):
+    """swiggy_services: the Swiggy services this user can use right now."""
+    prompt = (
         "You are a helpful personal assistant. Answer general questions "
         "directly from your own knowledge. Use tools only when a request "
         "needs the user's own data; a single message may need several tools.\n"
-        f"Today is {date.today():%Y/%m/%d}.\n\n"
+        f"Today is {date.today():%Y/%m/%d} ({date.today():%A}).\n\n"
         + GMAIL_RULES
-        + ("\n" + SWIGGY_RULES if swiggy_enabled else "")
     )
+    if swiggy_services:
+        prompt += "\n" + SWIGGY_RULES
+        for service in ("food", "instamart", "dineout"):
+            if service in swiggy_services:
+                prompt += "\n" + SERVICE_RULES[service]
+    return prompt

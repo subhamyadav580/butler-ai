@@ -41,11 +41,11 @@ There's no intent classifier. The LLM sees **all** tools and decides which ones 
 - **"Unread mails in Promotions and Social"** gets two parallel `count_unread` calls.
 - **"Unread mails and 15% of 240"** gets one tool call plus arithmetic in the answer.
 
-Adding a capability means adding tools, not routes; see [Adding tools](adding-tools.md). The limit is model accuracy: with many similar tools, small models start choosing the wrong one. At around 30–40 tools or more, consider loading only the tools relevant to each request, or splitting into sub-agents.
+Adding a capability means adding tools, not routes; see [Adding tools](adding-tools.md). The limit is model accuracy: with many similar tools, small models start choosing the wrong one. Butler has **49 tools** with all Swiggy services enabled. Use `gpt-4.1-mini` or better, trim with `SWIGGY_SERVICES`, or eventually load only the tools relevant to each request, or split into sub-agents.
 
 ## The system prompt
 
-`system_prompt(swiggy_enabled)` in [prompts.py](../../butler/agent/prompts.py) is rebuilt on **every** LLM call and never stored in memory:
+`system_prompt(swiggy_services)` in [prompts.py](../../butler/agent/prompts.py) is rebuilt on **every** LLM call and never stored in memory:
 
 ```
 You are a helpful personal assistant. … Use tools only when a request
@@ -54,13 +54,14 @@ Today is 2026/10/10.              ← so "last week" becomes a real date
 
 <GMAIL_RULES>                     ← always
 <SWIGGY_RULES>                    ← only if this user may use Swiggy
+<FOOD / INSTAMART / DINEOUT RULES> ← one block per Swiggy service that loaded
 ```
 
 Each integration owns one rules block. Put workflow knowledge there that tool descriptions can't express, for example:
 
-- **Ordering:** "call `get_addresses` first"
+- **Ordering:** "call `instamart_get_cart` before `instamart_update_cart`, because updates replace the whole cart"
 - **Interaction rules:** "never ask the user to choose an email in plain text; call `pick_email`"
-- **Quirks of the outside service:** "`update_food_cart` needs `addressId` even though the schema doesn't say so"
+- **Quirks of the outside service:** "`food_update_food_cart` needs `addressId` even though the schema doesn't say so"
 
 ## Per-user tool sets
 
@@ -76,7 +77,7 @@ The `agent` node reads `config["configurable"]["swiggy_allowed"]` and picks the 
 `ChatOpenAI(model=OPENAI_MODEL, temperature=0)`, set via `OPENAI_MODEL` (default `gpt-4o-mini`).
 
 - **Temperature 0** makes tool selection repeatable.
-- **`gpt-4.1-mini`** handles multi-step flows (the Swiggy cart) noticeably better. `gpt-4o-mini` sometimes stalls or invents IDs.
+- **`gpt-4.1-mini`** handles multi-step flows (Swiggy carts and bookings) noticeably better. With 49 tools, `gpt-4o-mini` has been seen inventing product IDs, picking the wrong saved address, and re-asking for confirmation.
 - **Another provider:** swap `ChatOpenAI` for any LangChain chat model with tool calling (`ChatAnthropic` and others). The rest of the code doesn't care.
 
 ## Error handling

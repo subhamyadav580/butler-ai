@@ -9,7 +9,7 @@ Each step is useful on its own, so you can stop after any of them.
 | [1. Install](#1-install) | Butler on your machine | 3 min |
 | [2. Add your OpenAI key](#2-add-your-openai-key) | A working chat for general questions | 1 min |
 | [3. Connect Gmail](#3-connect-gmail) | "How many unread mails…", "open the mail from…" | 8 min |
-| [4. Connect Swiggy](#4-connect-swiggy-optional) | Restaurant search, cart, ordering (India) | 1 min |
+| [4. Connect Swiggy](#4-connect-swiggy-optional) | Food delivery, Instamart groceries, Dineout tables (India) | 1 min |
 | [5. Pick an interface](#5-pick-an-interface) | Web UI, Telegram, or terminal | 2 min |
 
 ## Before you start
@@ -132,6 +132,9 @@ Which addresses do I have saved on Swiggy?
 Find veg biryani near my Office                  ← uses your saved address
 Add 1 of the first one to my cart
 Place the order, cash on delivery                ← asks you to Approve
+Search Instamart for milk and bread              ← groceries
+Find Italian restaurants in Connaught Place      ← Dineout
+Book a free table for 2 tomorrow at 8 pm         ← asks you to Approve
 ```
 
 ## Next steps

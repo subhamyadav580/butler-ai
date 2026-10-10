@@ -14,7 +14,7 @@ async def list_integrations(
     agent: AgentService = Depends(get_agent_service),
 ) -> IntegrationsResponse:
     return IntegrationsResponse(
-        integrations=integrations.list_status(agent.swiggy_loaded),
+        integrations=integrations.list_status(agent.swiggy_services),
         agent_has_swiggy=agent.swiggy_loaded,
     )
 

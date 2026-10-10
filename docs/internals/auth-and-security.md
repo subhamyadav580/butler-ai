@@ -47,6 +47,7 @@ Swiggy login: phone number + OTP
 secrets/swiggy_token.json  ── access token, registered client, expires_at
 ```
 
+- **One login, all services:** the token is issued for `https://mcp.swiggy.com/`, so it covers Food, Instamart and Dineout.
 - **Expiry:** tokens last **5 days**, and Swiggy v1 rejects refresh. Butler doesn't try to refresh; it asks you to log in again.
 - **Saving tokens:** `FileTokenStorage` saves the token and client, records `expires_at`, and sets the file to `chmod 600`.
 - **At startup:** if there's no token, or it has expired, Butler skips Swiggy entirely (`load_swiggy_tools`) and prints one line, instead of failing with an OAuth traceback.
@@ -95,7 +96,7 @@ Swiggy access is enforced twice. Users without access never have the Swiggy tool
 ## Action safety
 
 - **Gmail:** read-only by scope.
-- **Swiggy:** the irreversible tools (`place_food_order`, `confirm_order`, `create_address`, `delete_address`, `flush_food_cart`) always need **Approve**. Rejecting, ignoring, or moving on never runs them. See [Human in the loop](human-in-the-loop.md).
+- **Swiggy:** every tool in `NEEDS_APPROVAL` always needs **Approve**: placing or confirming orders (Food, Instamart), booking a table (Dineout), confirming payments, adding or deleting addresses, and clearing carts. Rejecting, ignoring, or moving on never runs them. See [Human in the loop](human-in-the-loop.md).
 - **Errors:** tool failures become messages to the LLM, never crashes or partial actions.
 
 ## Checklist before sharing your instance

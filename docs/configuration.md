@@ -25,6 +25,12 @@ Real environment variables take priority over `.env`.
 | `BUTLER_WEB_PORT` | `8000` | Port |
 | `BUTLER_WEB_PASSWORD` | (empty: no login) | Require this password in the UI. **Set it whenever the host isn't `127.0.0.1`** |
 
+### Swiggy
+
+| Variable | Default | Description |
+|---|---|---|
+| `SWIGGY_SERVICES` | `food,instamart,dineout` | Which Swiggy services to load. Fewer services means fewer tools for the model |
+
 ### Telegram
 
 | Variable | Default | Description |
@@ -50,7 +56,7 @@ None of these are ever committed; the folder is git-ignored.
 |---|---|---|
 | `google_client_secret.json` | You download it ([Gmail guide](integrations/gmail.md)) | Your Google OAuth client |
 | `gmail_token.json` | `gmail-login` | Gmail access token and refresh token |
-| `swiggy_token.json` | `swiggy-login` | Swiggy access token (lasts 5 days) and registered client |
+| `swiggy_token.json` | `swiggy-login` | Swiggy access token for all services (lasts 5 days) and registered client |
 
 Back the folder up if you move Butler to another machine. Delete a token file to disconnect that account.
 

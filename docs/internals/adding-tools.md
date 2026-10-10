@@ -6,7 +6,7 @@ Step-by-step recipes, from the smallest change to the largest. Read [Tools](tool
 |---|---|
 | Add one more Gmail action | [1. Add a tool to an existing integration](#1-add-a-tool-to-an-existing-integration) |
 | Connect a new service through its Python SDK or REST API | [2. Add a new integration](#2-add-a-new-integration) |
-| Add more Swiggy servers (Instamart, Dineout…) | [3. Add another Swiggy MCP server](#3-add-another-swiggy-mcp-server) |
+| Add another Swiggy service (Scenes, …) | [3. Add another Swiggy MCP server](#3-add-another-swiggy-mcp-server) |
 | Connect any other MCP server | [4. Add a third-party MCP server](#4-add-a-third-party-mcp-server) |
 | Make a tool ask before acting | [5. Require approval for a tool](#5-require-approval-for-a-tool) |
 | Ask the user a new kind of question | [6. Add a new kind of question](#6-add-a-new-kind-of-question) |
@@ -158,26 +158,32 @@ Add `docs/integrations/calendar.md` (setup and what you can ask), link it from t
 
 ## 3. Add another Swiggy MCP server
 
-Swiggy runs four servers: `food`, `im` (Instamart), `dineout` and `scenes`. Tool names are unique across them.
+Food, Instamart and Dineout are already integrated. Swiggy also runs **Scenes** (events and tickets, `https://mcp.swiggy.com/scenes`). Adding it, or any future Swiggy service, works like this:
 
-1. **Add the URL** in [swiggy/config.py](../../butler/integrations/swiggy/config.py):
+1. **Add the URL** to `ALL_SERVERS` in [swiggy/config.py](../../butler/integrations/swiggy/config.py), and add the name to the default `SWIGGY_SERVICES` in [butler/config.py](../../butler/config.py):
 
    ```python
-   SERVERS = {
-       "food": "https://mcp.swiggy.com/food",
-       "im": "https://mcp.swiggy.com/im",
+   ALL_SERVERS = {
+       ...,
+       "scenes": "https://mcp.swiggy.com/scenes",
    }
    ```
 
-   `MultiServerMCPClient` now loads tools from both.
+   Its tools load automatically as `scenes_<tool>`. Don't rely on Swiggy's docs saying names are unique: Food, Instamart and Dineout share several names, which is why every tool is prefixed.
 
-2. **Check the login.** The current token was issued for the whole `https://mcp.swiggy.com/` resource, so one `swiggy-login` should cover every server. After adding a server, run `python -m butler swiggy-login`; it lists the tools from all servers. If a server rejects the token, give it its own `make_auth(...)` with its own token file.
+2. **List the real tools.** Run `python -m butler swiggy-login`, which prints every tool per service. The existing login covers all servers, because the token is issued for `https://mcp.swiggy.com/`. Swiggy's documentation doesn't always match what the server returns: Instamart's docs list 19 tools, but the server returns 16. Trust the output.
 
-3. **Gate its risky tools.** Add the new server's order, payment and cart-clearing tool names to `NEEDS_APPROVAL` in [swiggy/tools.py](../../butler/integrations/swiggy/tools.py). The current list only covers Food. List the names from the `swiggy-login` output.
+3. **Drop useless tools.** Add support-only or widget-only tools to `EXCLUDED_TOOLS`.
 
-4. **Teach the workflow.** Add Instamart-specific steps to `SWIGGY_RULES`, or a separate `INSTAMART_RULES`.
+4. **Gate risky tools.** Add every tool that orders, pays, books, cancels, or changes addresses to `NEEDS_APPROVAL`, with the question for the card. If a cart or summary tool exists, add a preview in `_preview()`.
 
-5. **Watch the tool count.** Food alone is 20 tools; each server adds 12–20 more. Past about 40 tools, smaller models choose worse. Consider a stronger model (`OPENAI_MODEL=gpt-4.1-mini` or better) or loading tools per request.
+5. **Teach the workflow.** Add a `SCENES_RULES` block in [agent/prompts.py](../../butler/agent/prompts.py), register it in `SERVICE_RULES` and in the order in `system_prompt()`. Read the tools' own descriptions first; they often contain required steps such as "call X before Y" or "this replaces the whole cart".
+
+6. **Add the labels.** In the web UI, add status labels for the new tools in `TOOL_LABELS` ([Chat.tsx](../../frontend/src/components/Chat.tsx)).
+
+7. **Test** with approvals **rejected**, and leave any test cart empty afterwards. See [Testing](#testing).
+
+8. **Watch the tool count.** Today there are 49 tools (5 Gmail and 44 Swiggy). Each service adds 10–20. Smaller models choose worse as the list grows; recommend `gpt-4.1-mini` or better, or let users trim with `SWIGGY_SERVICES`.
 
 ## 4. Add a third-party MCP server
 
@@ -213,7 +219,7 @@ Then:
 
 ## 5. Require approval for a tool
 
-**MCP tools:** add the tool's name to `NEEDS_APPROVAL` in the integration's `tools.py`. Done.
+**MCP tools:** add the tool's (prefixed) name to `NEEDS_APPROVAL` in the integration's `tools.py`, with the question to show. Optionally add a preview in `_preview()`.
 
 **Your own Python tools:** call `interrupt()` before doing anything irreversible:
 

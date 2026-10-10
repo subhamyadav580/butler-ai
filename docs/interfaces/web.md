@@ -29,7 +29,7 @@ Rebuild the frontend (`npm run build`) after you pull updates that change `front
 - **Conversations:** **+ New chat** starts a fresh conversation. Earlier ones are listed in the sidebar. **Double-click** a title to rename it; the **×** deletes it.
 - **Email picker:** when you ask to open an email, Butler shows a list. Click one to read it, or **Cancel**.
 - **Approvals:** before Butler places an order, changes an address or clears your cart, it shows a card with the details and **Approve / Reject**.
-- **Integrations:** shows whether Gmail and Swiggy are connected, how long the Swiggy login has left, and a **Connect** or **Reconnect** button.
+- **Integrations:** shows whether Gmail and Swiggy are connected, how long the Swiggy login has left, which Swiggy services are loaded, and a **Connect** or **Reconnect** button.
 
 ## Where chats are stored
 

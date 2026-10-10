@@ -9,7 +9,7 @@ Code: [agent/human.py](../../butler/agent/human.py), the tools that raise interr
 | `type` | Raised by | Payload | Resume value |
 |---|---|---|---|
 | `pick_email` | `pick_email` tool | `question`, `emails: [{id, from, subject, snippet, unread, …}]` | `{"email_id": "<id>"}`, or `{"email_id": null}` to cancel |
-| `confirm_action` | Swiggy tools in `NEEDS_APPROVAL` | `question`, `tool`, `args`, `details` (the cart, for orders) | `{"approved": true \| false}` |
+| `confirm_action` | Swiggy tools in `NEEDS_APPROVAL` (Food, Instamart and Dineout orders, bookings, address changes, clearing carts) | `question` (for example "Book this table on Swiggy Dineout?"), `tool`, `args`, `details` (cart or booking preview) | `{"approved": true \| false}` |
 
 ## How a pause works
 
@@ -70,7 +70,7 @@ The tool turns your answer into a normal tool result, so the LLM reacts naturall
 | Picked an email | `{"status": "selected", "message": "The user picked this email. Present its details.", "email": {…}}` |
 | Cancelled the picker | `{"status": "cancelled", "message": "The user closed the email picker on purpose. This is not an error: do not retry…"}` |
 | Approved | The real Swiggy tool's result |
-| Rejected | `"The user rejected place_food_order. Nothing was changed. Ask what they would like to do instead."` |
+| Rejected | `"The user rejected food_place_food_order. Nothing was changed. Ask what they would like to do instead."` |
 
 The wording matters: an earlier "User did not pick an email" made the model apologise and retry, as if something had failed.
 

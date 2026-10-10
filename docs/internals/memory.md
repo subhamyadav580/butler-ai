@@ -48,7 +48,7 @@ That's what makes follow-ups work:
 
 - **"Who sent it?"** works because the earlier tool result, with the sender, is in the context.
 - **"Add the first one to my cart"** works because the `search_menu` result, with `restaurantId` and item IDs, is there.
-- **"Use my Office address"** works because the `get_addresses` result, with the address IDs, is there.
+- **"Use my Office address"** works because the `food_get_addresses` result, with the address IDs, is there.
 
 ### Thread IDs
 

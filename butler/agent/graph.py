@@ -9,7 +9,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from butler.config import OPENAI_MODEL
 from butler.integrations.gmail import GMAIL_TOOLS
-from butler.integrations.swiggy import load_swiggy_tools
+from butler.integrations.swiggy import load_swiggy_tools, services_of
 
 from .prompts import system_prompt
 
@@ -50,10 +50,12 @@ async def build_graph():
     """Load every tool (Swiggy needs async MCP calls) and compile the agent."""
     swiggy_tools, swiggy_error = await load_swiggy_tools()
     if swiggy_error:
-        print(f"WARNING: {swiggy_error}. Continuing without Swiggy.")
+        suffix = "" if swiggy_tools else " Continuing without Swiggy."
+        print(f"WARNING: {swiggy_error}.{suffix}")
 
     # Every capability the agent has. Add new tool lists here.
     all_tools = GMAIL_TOOLS + swiggy_tools
+    swiggy_services = services_of(swiggy_tools)   # e.g. {"food", "instamart", "dineout"}
 
     # Users without Swiggy access never even see the Swiggy tools
     llm_with_swiggy = llm.bind_tools(all_tools)
@@ -64,9 +66,10 @@ async def build_graph():
             "swiggy_allowed", True
         )
         agent_llm = llm_with_swiggy if swiggy_enabled else llm_without_swiggy
+        services = swiggy_services if swiggy_enabled else ()
 
         response = await agent_llm.ainvoke(
-            [{"role": "system", "content": system_prompt(swiggy_enabled)}]
+            [{"role": "system", "content": system_prompt(services)}]
             + with_tool_results(state["messages"])
         )
         return {"messages": [response]}

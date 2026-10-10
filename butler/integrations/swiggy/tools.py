@@ -1,26 +1,37 @@
 import json
 import time
+from datetime import datetime
 
 from langchain_core.tools import StructuredTool
 from langgraph.config import get_config
 from langgraph.types import interrupt
 
-from .auth import FileTokenStorage, SwiggyLoginRequired
+from .auth import FileTokenStorage, describe_error, is_login_error
 from .client import get_swiggy_tools
 from .config import LOGIN_COMMAND
 
 
-# Tools that change something real on the user's Swiggy account
+# Tools that change something real on the user's Swiggy account, with the
+# question shown on the Approve/Reject card. Names carry the service prefix.
 NEEDS_APPROVAL = {
-    "place_food_order",
-    "confirm_order",
-    "create_address",
-    "delete_address",
-    "flush_food_cart",
+    # Food
+    "food_place_food_order": "Place this Swiggy Food order?",
+    "food_confirm_order": "Confirm this Swiggy Food order?",
+    "food_create_address": "Add this address to your Swiggy account?",
+    "food_delete_address": "Delete this saved Swiggy address?",
+    "food_flush_food_cart": "Clear your Swiggy Food cart?",
+    # Instamart
+    "instamart_checkout": "Place this Instamart order?",
+    "instamart_confirm_order": "Confirm this Instamart order?",
+    "instamart_create_address": "Add this address to your Swiggy account?",
+    "instamart_delete_address": "Delete this saved Swiggy address?",
+    "instamart_clear_cart": "Clear your Instamart cart?",
+    # Dineout
+    "dineout_book_table": "Book this table on Swiggy Dineout?",
+    "dineout_confirm_order": "Confirm this Dineout booking payment?",
 }
 
-# Shown alongside the approval prompt so the user sees what they're ordering
-SHOW_CART_FOR = {"place_food_order", "confirm_order"}
+PREVIEW_CHARS = 1500
 
 LOGIN_EXPIRED = (
     "Swiggy login has expired. Tell the user to run "
@@ -28,12 +39,6 @@ LOGIN_EXPIRED = (
 )
 
 NOT_ALLOWED = "Swiggy is not available for this user."
-
-
-def _is_login_error(error):
-    if isinstance(error, SwiggyLoginRequired):
-        return True
-    return any(_is_login_error(e) for e in getattr(error, "exceptions", []))
 
 
 def _swiggy_allowed():
@@ -45,7 +50,7 @@ async def _call(tool, args):
     try:
         result = await tool.ainvoke(args)
     except Exception as error:
-        if _is_login_error(error):
+        if is_login_error(error):
             return LOGIN_EXPIRED
         raise
     return _strip_widget_notes(_to_text(result))
@@ -74,26 +79,58 @@ def _strip_widget_notes(text):
     ).strip()
 
 
-def _wrap(tool, cart_tool):
+async def _preview(name, args, raw):
+    """What the approval card shows next to the question. Read-only calls only:
+    this runs again when the graph resumes."""
+    if name in ("food_place_food_order", "food_confirm_order") and args.get("addressId"):
+        return await _call(raw["food_get_food_cart"], {"addressId": args["addressId"]})
+
+    if name in ("instamart_checkout", "instamart_confirm_order") and "instamart_get_cart" in raw:
+        return await _call(raw["instamart_get_cart"], {})
+
+    if name == "dineout_book_table":
+        when = args.get("reservationTime")
+        lines = [
+            f"Guests: {args.get('guestCount', '?')}",
+            "Time: " + (
+                datetime.fromtimestamp(int(when)).strftime("%a %d %b %Y, %I:%M %p")
+                if when else "?"
+            ),
+            f"Payment: {args.get('paymentMethod') or 'free reservation'}",
+        ]
+        details = raw.get("dineout_get_restaurant_details")
+        if details and args.get("latitude") is not None:
+            text = await _call(details, {
+                "restaurantId": args["restaurantId"],
+                "latitude": args["latitude"],
+                "longitude": args["longitude"],
+            })
+            lines += ["", text]
+        return "\n".join(lines)
+
+    return None
+
+
+def _wrap(tool, raw):
     async def run(**args):
         if not _swiggy_allowed():
             return NOT_ALLOWED
 
         if tool.name in NEEDS_APPROVAL:
-            cart = None
-            # get_food_cart requires addressId; both order tools carry it
-            if tool.name in SHOW_CART_FOR and cart_tool and args.get("addressId"):
-                cart = await _call(cart_tool, {"addressId": args["addressId"]})
+            try:
+                details = await _preview(tool.name, args, raw)
+            except Exception:  # noqa: BLE001 — a preview must never block approval
+                details = None
 
             # Pause the graph; the caller resumes with {"approved": bool}.
             # On resume this function re-runs from the top, so nothing
             # above this line may change anything.
             answer = interrupt({
                 "type": "confirm_action",
-                "question": f"Allow Swiggy to run {tool.name}?",
+                "question": NEEDS_APPROVAL[tool.name],
                 "tool": tool.name,
                 "args": args,
-                "details": cart,
+                "details": details[:PREVIEW_CHARS] if details else None,
             })
             if not (answer or {}).get("approved"):
                 return (
@@ -158,12 +195,39 @@ async def load_swiggy_tools():
     if not expires_at or expires_at < time.time():
         return [], f"Swiggy not connected — run: {LOGIN_COMMAND}"
 
+    failures = {}
     try:
-        tools = await get_swiggy_tools(interactive=False)
+        tools = await get_swiggy_tools(interactive=False, failures=failures)
     except Exception as error:
-        if _is_login_error(error):
+        if is_login_error(error):
             return [], f"Swiggy not logged in — run: {LOGIN_COMMAND}"
-        return [], f"Swiggy unavailable: {error!r}"
+        return [], f"Swiggy unavailable: {describe_error(error)}"
 
-    cart_tool = next((t for t in tools if t.name == "get_food_cart"), None)
-    return [_wrap(tool, cart_tool) for tool in tools], None
+    problem = None
+    if failures:
+        problem = "Swiggy " + "; ".join(
+            f"{name} unavailable ({reason})" for name, reason in failures.items()
+        )
+        if not tools:
+            return [], problem
+
+    raw = {tool.name: tool for tool in tools}
+    return [_wrap(tool, raw) for tool in tools], problem
+
+
+def services_of(tools):
+    """Which Swiggy services these tools belong to: {"food", "instamart", …}."""
+    return {tool.name.split("_", 1)[0] for tool in tools}
+
+
+# Read-only tools that prove a login works, in order of preference
+SMOKE_TEST_TOOLS = ("food_get_addresses", "instamart_get_addresses", "dineout_get_saved_locations")
+
+
+async def smoke_test(tools):
+    """Call one harmless read-only tool; returns its text."""
+    by_name = {tool.name: tool for tool in tools}
+    for name in SMOKE_TEST_TOOLS:
+        if name in by_name:
+            return _to_text(await by_name[name].ainvoke({}))
+    return "(no address tool among the enabled services)"

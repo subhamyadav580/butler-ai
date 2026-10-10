@@ -1,6 +1,6 @@
 # Butler
 
-**A self-hosted personal AI assistant for your Gmail and Swiggy.** You can chat with it in a **web UI**, on **Telegram**, or in your **terminal**.
+**A self-hosted personal AI assistant for your Gmail and Swiggy (Food, Instamart, Dineout).** You can chat with it in a **web UI**, on **Telegram**, or in your **terminal**.
 
 ```
 You:    how many unread mails in Promotions, and what's 15% of 240?
@@ -11,6 +11,9 @@ Butler: Which email do you want to open?   [Your weekly job alerts] [Cancel]
 
 You:    add 1 veg biryani from Behrouz to my cart
 Butler: Added. Item total ₹399 · taxes ₹69.85 · to pay ₹469. How would you like to pay?
+
+You:    book a free table for 2 at Brewtally Honest tomorrow at 7 pm
+Butler: ⚠️ Book this table on Swiggy Dineout?  Guests: 2 · Sun 11 Oct, 7:00 PM   [Approve] [Reject]
 ```
 
 Butler is open source and runs on your own machine. You connect **your own** accounts, and your tokens stay in a local `secrets/` folder.
@@ -20,9 +23,11 @@ Butler is open source and runs on your own machine. You connect **your own** acc
 | | |
 |---|---|
 | 📬 **Gmail** (read-only) | List, search and filter mail by tab (Primary, Promotions, Updates, …), sender, subject, date or unread; count unread mail; open any email |
-| 🍔 **Swiggy Food** (India) | Saved addresses, restaurant and dish search, menus, cart, coupons, ordering, order tracking |
+| 🍔 **Swiggy Food** (India) | Restaurant and dish search, menus, cart, coupons, ordering, order tracking |
+| 🛒 **Swiggy Instamart** (India) | Groceries and essentials: product search, your usual items, cart, checkout, tracking |
+| 🍽️ **Swiggy Dineout** (India) | Find restaurants, check available tables, book free reservations |
 | 💬 **General questions** | Anything else, answered directly by the model |
-| ✋ **Asks before acting** | Shows a picker when you want to open an email, and asks you to **Approve/Reject** before placing an order or changing your account |
+| ✋ **Asks before acting** | Shows a picker when you want to open an email, and asks you to **Approve/Reject** before placing an order, booking a table, or changing your account |
 
 ## Three ways to use it
 
@@ -99,8 +104,8 @@ Butler acts on **your** accounts, so treat it like a password manager:
 
 - **Agent memory is in-process:** web chats are saved (sidebar and transcripts survive restarts), but after a restart Butler doesn't remember the earlier context of a chat. Telegram and terminal chats aren't saved.
 - **Gmail is read-only:** no sending or deleting.
-- **Swiggy:** India only and Food only for now. Logins last 5 days (a Swiggy limit).
-- **Model choice:** works with `gpt-4o-mini`. `gpt-4.1-mini` is more reliable for multi-step flows like building a cart (set `OPENAI_MODEL`).
+- **Swiggy:** India only. Food, Instamart and Dineout are supported (not Scenes yet). Logins last 5 days, and Dineout paid deals and cancellations need the Swiggy app.
+- **Model choice:** works with `gpt-4o-mini`, but with all Swiggy services (49 tools) **`gpt-4.1-mini` is recommended**. It's much more reliable at carts and bookings. Set `OPENAI_MODEL`, or trim with `SWIGGY_SERVICES`.
 
 ## Contributing
 

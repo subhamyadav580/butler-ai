@@ -14,7 +14,8 @@ from google.oauth2.credentials import Credentials
 from butler.config import GMAIL_TOKEN_FILE, GOOGLE_CLIENT_SECRET_FILE
 from butler.integrations.gmail.auth import get_gmail_service
 from butler.integrations.gmail.config import SCOPES as GMAIL_SCOPES
-from butler.integrations.swiggy import get_swiggy_tools
+from butler.integrations.swiggy import get_swiggy_tools, smoke_test
+from butler.integrations.swiggy.config import SERVERS as SWIGGY_SERVERS
 from butler.integrations.swiggy.auth import FileTokenStorage
 
 
@@ -33,8 +34,9 @@ class IntegrationService:
     # Status
     # ------------------------------------------------------------------
 
-    def list_status(self, swiggy_loaded):
-        return [self._gmail_status(), self._swiggy_status(swiggy_loaded)]
+    def list_status(self, swiggy_services):
+        """swiggy_services: the Swiggy services the running agent has loaded."""
+        return [self._gmail_status(), self._swiggy_status(set(swiggy_services))]
 
     def _common(self, name):
         return {
@@ -68,11 +70,14 @@ class IntegrationService:
 
         return {**status, "state": "disconnected", "detail": "Not connected yet."}
 
-    def _swiggy_status(self, swiggy_loaded):
+    def _swiggy_status(self, loaded):
         status = {
             "name": "swiggy",
-            "title": "Swiggy Food",
-            "description": "Search restaurants, build a cart and order food (India).",
+            "title": "Swiggy",
+            "description": (
+                "Food delivery, Instamart groceries and Dineout table "
+                "bookings (India). Enabled: " + ", ".join(SWIGGY_SERVERS) + "."
+            ),
             **self._common("swiggy"),
         }
 
@@ -86,8 +91,14 @@ class IntegrationService:
 
         days_left = (expires_at - time.time()) / 86400
         detail = f"Connected. Login expires in {days_left:.1f} days (Swiggy limit)."
-        if not swiggy_loaded:
+        missing = set(SWIGGY_SERVERS) - loaded
+        if not loaded:
             detail += " Reload the agent to start using it."
+        elif missing:
+            detail += (
+                f" Not loaded right now: {', '.join(sorted(missing))} "
+                "(Swiggy may be rate-limiting). Reload the agent to retry."
+            )
         return {**status, "state": "connected", "detail": detail, "expires_at": expires_at}
 
     # ------------------------------------------------------------------
@@ -129,8 +140,7 @@ class IntegrationService:
     async def _connect_swiggy(self):
         # Opens a browser on this machine for phone + OTP, saves the token
         tools = await get_swiggy_tools(interactive=True)
-        get_addresses = next(t for t in tools if t.name == "get_addresses")
-        await get_addresses.ainvoke({})
+        await smoke_test(tools)
 
 
 def _describe(error):

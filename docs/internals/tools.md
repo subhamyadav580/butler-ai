@@ -5,7 +5,7 @@ Everything Butler can *do* beyond talking is a **tool**: a function the LLM can 
 | | Python tools (Gmail) | MCP tools (Swiggy) |
 |---|---|---|
 | Defined | In our code, with `@tool` | By the remote service, discovered at startup |
-| Runs | Our Python calling Google's API | A JSON-RPC call to `mcp.swiggy.com` |
+| Runs | Our Python calling Google's API | A JSON-RPC call to `mcp.swiggy.com/{food,im,dineout}` |
 | Sync/async | Sync, run in a thread by `ToolNode` | Async |
 | Wrapped by us | Not needed | Yes: access check, approvals, result cleanup, schema fix |
 | Code | [integrations/gmail/tools.py](../../butler/integrations/gmail/tools.py) | [integrations/swiggy/tools.py](../../butler/integrations/swiggy/tools.py) |
@@ -58,51 +58,97 @@ auth.py       OAuth credentials, token file, interactive or not
 
 ## MCP tools: Swiggy
 
-[MCP](https://modelcontextprotocol.io) (Model Context Protocol) lets a service publish tools that any agent can discover and call. Swiggy runs an MCP server; Butler is the client.
+[MCP](https://modelcontextprotocol.io) (Model Context Protocol) lets a service publish tools that any agent can discover and call. Swiggy runs one MCP server per service; Butler is the client.
+
+| Service | Server | Tools used |
+|---|---|---|
+| Food | `https://mcp.swiggy.com/food` | 19 |
+| Instamart | `https://mcp.swiggy.com/im` | 15 |
+| Dineout | `https://mcp.swiggy.com/dineout` | 10 |
+
+Choose which to load with `SWIGGY_SERVICES` (default: all three); see [swiggy/config.py](../../butler/integrations/swiggy/config.py).
 
 ### Discovery
 
 ```python
-# integrations/swiggy/client.py
-MultiServerMCPClient({
-    "swiggy_food": {
-        "transport": "streamable_http",
-        "url": "https://mcp.swiggy.com/food",
-        "auth": make_auth(),          # OAuth (see Auth and security)
-    }
-}).get_tools()
+# integrations/swiggy/client.py: one client per server
+MultiServerMCPClient(
+    {"instamart": {"transport": "streamable_http",
+                   "url": "https://mcp.swiggy.com/im",
+                   "auth": make_auth()}},          # OAuth (see Auth and security)
+    tool_name_prefix=True,
+).get_tools()
 ```
 
-`langchain-mcp-adapters` asks the server which tools it has (`tools/list`) and turns each into a LangChain tool, with the server's name, description and JSON schema. Swiggy Food returns 20 tools. Butler doesn't hard-code them, so new Swiggy tools appear automatically.
+`langchain-mcp-adapters` asks each server which tools it has (`tools/list`) and turns each into a LangChain tool, with the server's name, description and JSON schema. Butler doesn't hard-code them, so new Swiggy tools appear automatically.
+
+### Name prefixes
+
+Several tool names exist on more than one server: `get_addresses`, `create_address`, `delete_address`, `get_payment_options`, `check_payment_status`, `confirm_order` and `report_error`. OpenAI rejects duplicate tool names, so every tool gets its service as a prefix:
+
+```
+food_get_addresses        instamart_get_addresses      dineout_get_saved_locations
+food_update_food_cart     instamart_update_cart        dineout_book_table
+food_confirm_order        instamart_confirm_order      dineout_confirm_order
+```
+
+The prefix also tells the model which service a tool belongs to. The adapter maps a prefixed name back to the original when it calls the server.
+
+### Excluded tools
+
+`EXCLUDED_TOOLS` in `swiggy/config.py` keeps four tools away from the LLM:
+
+- the three `*_report_error` tools, which file bug reports with Swiggy's MCP team
+- `dineout_render_restaurants_dineout`, which only draws a widget Butler doesn't have
+
+### Loading each server independently
+
+`get_swiggy_tools()` loads one server at a time:
+
+- **Rate limited (`429`):** retry after 2 seconds, then after 5.
+- **Still failing:** skip that server and record why. The other services keep working, the startup warning names the missing one, and the web UI's Integrations page shows it.
+- **Login problem:** stop immediately, because it affects every server.
 
 ### Wrapping
 
 Raw MCP tools go to the agent only after `_wrap()` in [swiggy/tools.py](../../butler/integrations/swiggy/tools.py). Each wrapper does this:
 
 ```
-LLM calls update_food_cart(args)
+LLM calls instamart_checkout(args)
   │
   ├─ 1. Access check   swiggy_allowed false (from the run's config)? → "not available for this user"
-  ├─ 2. Approval       name in NEEDS_APPROVAL? → interrupt(confirm_action) → rejected? stop
+  ├─ 2. Approval       name in NEEDS_APPROVAL? → build preview → interrupt(confirm_action) → rejected? stop
   ├─ 3. Call           the real MCP tool
-  ├─ 4. Login errors   SwiggyLoginRequired → "login expired, run swiggy-login"
+  ├─ 4. Login errors   → "login expired, run swiggy-login"
   └─ 5. Clean up       MCP content blocks → plain text; drop "widget" instructions
 ```
 
-**Approvals** are a fixed list of tools that change something real:
+**Approvals.** `NEEDS_APPROVAL` maps each tool that changes something real to the question shown on the card:
 
 ```python
-NEEDS_APPROVAL = {"place_food_order", "confirm_order", "create_address",
-                  "delete_address", "flush_food_cart"}
+NEEDS_APPROVAL = {
+    "food_place_food_order": "Place this Swiggy Food order?",
+    "instamart_checkout": "Place this Instamart order?",
+    "dineout_book_table": "Book this table on Swiggy Dineout?",
+    # … confirm_order, create/delete_address and cart clearing for each service
+}
 ```
 
-The order tools also fetch the current cart, so the approval card shows what's being ordered. See [Human in the loop](human-in-the-loop.md).
+**Previews.** `_preview()` adds context to the card using read-only calls, which are safe to repeat on resume:
+
+| Approval for | Preview |
+|---|---|
+| Food orders | The Food cart (`food_get_food_cart`) |
+| Instamart orders | The Instamart cart (`instamart_get_cart`) |
+| Dineout bookings | Guests, time and payment from the arguments, plus restaurant details |
+
+See [Human in the loop](human-in-the-loop.md).
 
 **Result cleanup.** Swiggy's results are written for clients that draw a cart "widget", and they tell the LLM *"do not repeat the cart items, prices, or totals"*. Butler has no widget, so `_strip_widget_notes()` removes those lines; otherwise the LLM would hide the cart from you.
 
 ### Schema fixes for OpenAI
 
-OpenAI rejects a tool schema that has `anyOf`, `oneOf` or `allOf` at the **top level**. Swiggy uses that pattern for "pass `addressId` **or** `latitude` + `longitude`". `_openai_compatible()` removes the combinator and appends the rule to the description:
+OpenAI rejects a tool schema that has `anyOf`, `oneOf` or `allOf` at the **top level**. Swiggy Food uses that pattern for "pass `addressId` **or** `latitude` + `longitude`". `_openai_compatible()` removes the combinator and appends the rule to the description:
 
 ```
 …tool description…
@@ -112,9 +158,16 @@ You must provide: addressId OR latitude + longitude.
 
 Swiggy's server still validates the real rule.
 
-### Undocumented requirements
+### Rules the schema can't express
 
-Some quirks can't be fixed in the schema, so they go in the prompt's `SWIGGY_RULES`, for example: "`update_food_cart` needs `addressId` even though the schema doesn't list it". When an MCP tool keeps failing the same way, check the error text and add a rule.
+Workflow knowledge goes in the prompt ([agent/prompts.py](../../butler/agent/prompts.py)): one shared `SWIGGY_RULES` block, plus `FOOD_RULES`, `INSTAMART_RULES` and `DINEOUT_RULES`, each included only when that service is loaded. Examples:
+
+- `food_update_food_cart` needs `addressId` even though the schema doesn't list it.
+- `instamart_update_cart` **replaces the whole cart**, so always re-send the items already in it.
+- Dineout paid deals need UPI in the Swiggy app, so prefer free slots.
+- There's no widget: ignore tool text about tapping buttons, and write results out in full.
+
+The prompt also overrides Swiggy's own tool descriptions where they clash with a chat UI. For example, they say to always re-confirm the address, while Butler uses the address you named. When a tool keeps failing the same way, check the error text and add a rule.
 
 ## How tools are registered
 

@@ -36,8 +36,23 @@ Swiggy logins last 5 days and can't be refreshed. Run `python -m butler swiggy-l
 **Requests fail with `429`**
 That's Swiggy's rate limit. Wait a minute and try again.
 
+**`WARNING: Swiggy instamart unavailable (… 429 …)` at startup, or a service is "not loaded right now"**
+Swiggy rate-limited that service while Butler started. The other services still work. Wait a minute, then restart Butler or click **Reload agent** on the Integrations page.
+
+**Instamart says the address isn't serviceable**
+Instamart doesn't deliver everywhere. Ask Butler to use another saved address.
+
+**Dineout: "paid deal", or it won't book**
+Paid prebook deals need UPI payment in the Swiggy app. Choose a free slot, or book the paid deal in the app. Cancelling a booking also has to happen in the app.
+
+**Butler invents IDs, picks the wrong address, or keeps asking "would you like…?"**
+The model is struggling with many tools and multi-step flows. Set `OPENAI_MODEL=gpt-4.1-mini`, or load fewer Swiggy services with `SWIGGY_SERVICES=food`.
+
 **Butler searches but never adds anything to the cart**
 Smaller models sometimes stall on multi-step flows. Set `OPENAI_MODEL=gpt-4.1-mini` in `.env`, and be explicit: *"Add 1 Classic Paneer Subz Biryani, King Size, no add-ons."*
+
+**Instamart items disappeared from the cart**
+Instamart replaces the whole cart on every update. Butler is instructed to re-send existing items; if a model skipped that, ask it to add them again, and consider `gpt-4.1-mini`.
 
 **The login browser doesn't open, or `Address already in use` (port 8765)**
 Another Swiggy login is still running. Close it, or wait for it to time out, and try again.
