@@ -2,14 +2,16 @@
 
     python -m butler chat           # terminal chat
     python -m butler telegram       # run the Telegram bot
-    python -m butler swiggy-login   # log in to Swiggy (phone + OTP)
+    python -m butler web            # run the web UI (http://127.0.0.1:8000)
+    python -m butler gmail-login    # connect Gmail (Google login in the browser)
+    python -m butler swiggy-login   # connect Swiggy (phone + OTP in the browser)
     python -m butler gmail [...]    # quick Gmail reader, e.g. `gmail updates --unread`
 """
 
 import asyncio
 import sys
 
-COMMANDS = ("chat", "telegram", "swiggy-login", "gmail")
+COMMANDS = ("chat", "telegram", "web", "gmail-login", "swiggy-login", "gmail")
 
 
 def main():
@@ -19,6 +21,10 @@ def main():
 
     command = sys.argv.pop(1)
 
+    from butler.config import check_config
+    if command in ("chat", "telegram", "web"):
+        check_config(needs_telegram=command == "telegram")
+
     if command == "chat":
         from butler.interfaces import cli
         asyncio.run(cli.main())
@@ -26,6 +32,14 @@ def main():
     elif command == "telegram":
         from butler.interfaces import telegram_bot
         telegram_bot.main()
+
+    elif command == "web":
+        from butler.interfaces import web
+        web.main()
+
+    elif command == "gmail-login":
+        from butler.integrations.gmail import login as gmail_login
+        gmail_login.main()
 
     elif command == "swiggy-login":
         from butler.integrations.swiggy import login

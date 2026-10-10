@@ -122,7 +122,13 @@ def pick_email(
     chosen_id = (answer or {}).get("email_id")
 
     if not chosen_id:
-        return {"status": "cancelled", "message": "User did not pick an email."}
+        return {
+            "status": "cancelled",
+            "message": (
+                "The user closed the email picker on purpose. This is not an "
+                "error: do not retry or apologise, just ask what they want next."
+            ),
+        }
 
     return {
         "status": "selected",

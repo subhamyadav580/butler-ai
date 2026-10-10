@@ -24,7 +24,7 @@ def main():
     parser.add_argument("--before", help="YYYY/MM/DD")
     args = parser.parse_args()
 
-    emails = Gmail().get_emails(
+    emails = Gmail(interactive=True).get_emails(
         args.category,
         args.limit,
         sender=args.sender,

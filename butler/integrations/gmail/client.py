@@ -19,9 +19,16 @@ class Gmail:
         gmail.get_email(email_id)
     """
 
-    def __init__(self, credentials_file=CREDENTIALS_FILE, token_file=TOKEN_FILE):
+    def __init__(
+        self,
+        credentials_file=CREDENTIALS_FILE,
+        token_file=TOKEN_FILE,
+        interactive=False,
+    ):
         self.credentials_file = credentials_file
         self.token_file = token_file
+        # True: may open a browser to log in when not connected yet
+        self.interactive = interactive
         self._local = threading.local()
 
     @property
@@ -31,7 +38,8 @@ class Gmail:
         if getattr(self._local, "service", None) is None:
             self._local.service = get_gmail_service(
                 self.credentials_file,
-                self.token_file
+                self.token_file,
+                interactive=self.interactive,
             )
         return self._local.service
 

@@ -14,7 +14,7 @@ from telegram.ext import (
     filters,
 )
 
-from butler.agent import build_graph
+from butler.agent import build_graph, cancel_pending, pending_interrupt
 from butler.config import (
     TELEGRAM_ALLOWED_USER_IDS as ALLOWED_USER_IDS,
     TELEGRAM_BOT_TOKEN as TOKEN,
@@ -26,12 +26,6 @@ TELEGRAM_MAX_CHARS = 4096
 PICK_PREFIX = "pick:"
 PICK_CANCEL = "cancel"
 CONFIRM_PREFIX = "confirm:"
-
-# What to resume with when the user moves on without answering
-CANCEL_ANSWERS = {
-    "pick_email": {"email_id": None},
-    "confirm_action": {"approved": False},
-}
 
 # Built in post_init (loading Swiggy's MCP tools is async)
 graph = None
@@ -73,14 +67,6 @@ async def is_allowed(update: Update):
         "to TELEGRAM_ALLOWED_USER_IDS in .env to get access."
     )
     return False
-
-
-def pending_interrupt(config):
-    """Return the payload if this thread is paused waiting for the human."""
-    state = graph.get_state(config)
-    if state.interrupts:
-        return state.interrupts[0].value
-    return None
 
 
 async def send_text(message, text):
@@ -205,7 +191,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     print("Received:", text)
 
-    payload = pending_interrupt(config)
+    payload = pending_interrupt(graph, config)
     if payload:
         answer = typed_answer(payload, text)
         if answer:
@@ -213,9 +199,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
     # Anything else: cancel open questions, then handle the new message
-    while payload:
-        await graph.ainvoke(Command(resume=CANCEL_ANSWERS[payload["type"]]), config)
-        payload = pending_interrupt(config)
+    await cancel_pending(graph, config)
 
     await run_agent(
         update.message,
@@ -232,7 +216,7 @@ async def handle_pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     config = graph_config(update)
-    payload = pending_interrupt(config)
+    payload = pending_interrupt(graph, config)
 
     # Stale button from an older list
     if not payload or payload["type"] != "pick_email":
@@ -269,7 +253,7 @@ async def handle_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     config = graph_config(update)
-    payload = pending_interrupt(config)
+    payload = pending_interrupt(graph, config)
 
     if not payload or payload["type"] != "confirm_action":
         await query.edit_message_reply_markup(reply_markup=None)

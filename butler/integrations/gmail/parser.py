@@ -1,4 +1,5 @@
 import base64
+import html
 
 
 def get_header(headers, name):
@@ -24,7 +25,8 @@ def parse_summary(msg):
         "to": get_header(headers, "To"),
         "subject": get_header(headers, "Subject"),
         "date": get_header(headers, "Date"),
-        "snippet": msg.get("snippet", ""),
+        # Gmail returns snippets HTML-escaped (&quot;, &#39;, ...)
+        "snippet": html.unescape(msg.get("snippet", "")),
         "labels": labels,
         "unread": "UNREAD" in labels,
     }

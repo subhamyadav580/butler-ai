@@ -1,8 +1,10 @@
 [project]
 name = "butler"
 version = "0.1.0"
-description = "A personal AI assistant for Gmail and Swiggy, on Telegram or the terminal, built with LangGraph."
+description = "A self-hosted personal AI assistant for Gmail and Swiggy, on the web, Telegram or the terminal, built with LangGraph."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
     "langgraph>=1.2",
@@ -15,6 +17,8 @@ dependencies = [
     "google-api-python-client>=2.200",
     "google-auth-oauthlib>=1.5",
     "google-auth-httplib2>=0.4",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
 ]
 
 [project.scripts]

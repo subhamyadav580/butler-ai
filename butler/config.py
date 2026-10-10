@@ -35,3 +35,24 @@ TELEGRAM_ALLOWED_USER_IDS = _int_set(os.getenv("TELEGRAM_ALLOWED_USER_IDS"))
 # Swiggy acts on YOUR account. Set to restrict it to one Telegram user;
 # empty = every allowed user gets Swiggy
 TELEGRAM_OWNER_ID = int(os.getenv("TELEGRAM_OWNER_ID") or 0)
+
+# --- Web UI ----------------------------------------------------------------
+# Defaults to localhost only: the UI can read your Gmail and order on Swiggy
+WEB_HOST = os.getenv("BUTLER_WEB_HOST", "127.0.0.1")
+WEB_PORT = int(os.getenv("BUTLER_WEB_PORT", "8000"))
+
+# Set to require a password in the web UI. Empty = no login (fine on localhost)
+WEB_PASSWORD = os.getenv("BUTLER_WEB_PASSWORD", "")
+
+FRONTEND_DIST = ROOT_DIR / "frontend" / "dist"
+
+
+def check_config(needs_telegram=False):
+    """Fail fast with a readable message instead of a traceback."""
+    problems = []
+    if not os.getenv("OPENAI_API_KEY"):
+        problems.append("OPENAI_API_KEY is not set. Add it to .env (see .env.example).")
+    if needs_telegram and not TELEGRAM_BOT_TOKEN:
+        problems.append("TELEGRAM_BOT_TOKEN is not set. Create a bot with @BotFather and add it to .env.")
+    if problems:
+        raise SystemExit("Butler can't start:\n  - " + "\n  - ".join(problems))

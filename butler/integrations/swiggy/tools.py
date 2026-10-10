@@ -1,10 +1,11 @@
 import json
+import time
 
 from langchain_core.tools import StructuredTool
 from langgraph.config import get_config
 from langgraph.types import interrupt
 
-from .auth import SwiggyLoginRequired
+from .auth import FileTokenStorage, SwiggyLoginRequired
 from .client import get_swiggy_tools
 from .config import LOGIN_COMMAND
 
@@ -151,6 +152,12 @@ async def load_swiggy_tools():
     Returns [] (and the reason) if Swiggy isn't logged in, so the rest of
     the agent still works.
     """
+    # No saved (or an expired) login: skip the network round-trip, which
+    # would only fail with a noisy OAuth traceback
+    expires_at = FileTokenStorage().get_expires_at()
+    if not expires_at or expires_at < time.time():
+        return [], f"Swiggy not connected — run: {LOGIN_COMMAND}"
+
     try:
         tools = await get_swiggy_tools(interactive=False)
     except Exception as error:
