@@ -13,6 +13,12 @@ def get_chat_service(request: Request):
     return request.app.state.chat_service
 
 
+def get_todo_service():
+    # Same service the agent's todo tools use, so both see the same todos
+    from butler.integrations.todos import get_todo_service as service
+    return service()
+
+
 def get_integration_service(request: Request):
     return request.app.state.integration_service
 

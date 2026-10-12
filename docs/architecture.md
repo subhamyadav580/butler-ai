@@ -19,8 +19,8 @@ This page is the overview. For details on any part, and for step-by-step guides 
                          │ tool calls
           ┌──────────────┴───────────────┐
           ▼                              ▼
- integrations/gmail/             integrations/swiggy/
- Google API (read-only)          Swiggy MCP server (OAuth 2.1 + PKCE)
+ integrations/gmail · calendar    integrations/swiggy/
+ integrations/todos (SQLite)      Swiggy MCP servers (OAuth 2.1 + PKCE)
 ```
 
 - **One agent, every tool.** There's no intent router. The LLM sees every tool and decides which ones to call, if any. A single message can use several tools ("unread mails *and* 15% of 240").
@@ -34,13 +34,17 @@ This page is the overview. For details on any part, and for step-by-step guides 
 ```
 butler/
 ├── __main__.py              # `python -m butler <command>`
-├── config.py                # .env settings, secret paths, startup checks
+├── config.py                # .env settings, secret paths, time zone, startup checks
+├── db/                      # shared SQLite connection (data/butler.db)
 ├── agent/
 │   ├── graph.py             # builds the agent: tools, LLM, agent ⇄ tools loop, checkpointer
 │   ├── prompts.py           # system prompt + one rules block per integration
 │   └── human.py             # interrupt helpers shared by all interfaces
 ├── integrations/
+│   ├── google_oauth.py      # shared Google login (Gmail, Calendar)
 │   ├── gmail/               # auth, client, query builder, parser, tools.py, login.py
+│   ├── calendar/            # auth, client, time helpers, tools.py (approvals), login.py
+│   ├── todos/               # repo.py (table), service.py (rules), tools.py: local, no login
 │   └── swiggy/              # MCP OAuth, MCP client, tools.py (approval wrappers), login.py
 ├── interfaces/
 │   ├── cli.py               # terminal chat
@@ -51,8 +55,7 @@ butler/
     ├── routes/              #   URL → handler registration only
     ├── handlers/            #   HTTP: validation, status codes, SSE streaming
     ├── services/            #   logic, no FastAPI: AgentService, ChatService, IntegrationService
-    ├── repos/               #   data access: ThreadRepo, MessageRepo
-    ├── db/                  #   SQLite connection and schema
+    ├── repos/               #   data access: ThreadRepo, MessageRepo (+ chat tables)
     ├── schemas/             #   request/response models (Pydantic)
     ├── core/security.py     #   optional password protection
     └── dependencies.py      #   FastAPI dependency providers

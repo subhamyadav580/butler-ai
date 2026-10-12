@@ -29,3 +29,18 @@ async def cancel_pending(graph, config):
         await graph.ainvoke(Command(resume=CANCEL_ANSWERS[payload["type"]]), config)
         payload = pending_interrupt(graph, config)
 
+
+
+SWIGGY_PREFIXES = ("food_", "instamart_", "dineout_")
+
+
+def show_raw_args(payload):
+    """Whether an approval should show the tool's raw arguments.
+
+    Calendar and todo approvals carry a readable summary in `details`, so the
+    raw JSON is noise. Swiggy's arguments hold things the summary lacks
+    (payment method, address id), so they stay visible.
+    """
+    if not payload.get("details"):
+        return bool(payload.get("args"))
+    return str(payload.get("tool", "")).startswith(SWIGGY_PREFIXES)

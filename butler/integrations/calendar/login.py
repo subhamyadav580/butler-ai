@@ -1,0 +1,36 @@
+"""Log in to Google Calendar (Google login in the browser) and save the token.
+
+Run from the project root:
+    python -m butler calendar-login
+
+Uses the same Google OAuth client as Gmail (secrets/google_client_secret.json).
+The Google Calendar API must be enabled in that Google Cloud project.
+"""
+
+from googleapiclient.errors import HttpError
+
+from .auth import CalendarLoginRequired
+from .client import Calendar
+
+
+def main():
+    try:
+        calendar = Calendar(interactive=True)
+        profile = calendar.profile()
+    except CalendarLoginRequired as error:
+        raise SystemExit(str(error))
+    except HttpError as error:
+        text = str(error)
+        if error.resp.status == 403 and ("accessNotConfigured" in text or "has not been used" in text):
+            raise SystemExit(
+                "Logged in, but the Google Calendar API is not enabled for your "
+                "Google Cloud project. Enable it at "
+                "https://console.cloud.google.com/apis/library/calendar-json.googleapis.com "
+                "then run this again."
+            )
+        raise
+    print(f"Google Calendar connected: {profile['calendar']} (time zone {profile['timeZone']})")
+
+
+if __name__ == "__main__":
+    main()

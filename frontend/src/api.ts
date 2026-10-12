@@ -1,4 +1,13 @@
-import type { ChatMessage, IntegrationStatus, InterruptPayload, StreamEvent, Thread } from './types'
+import type {
+  ChatMessage,
+  IntegrationStatus,
+  InterruptPayload,
+  Priority,
+  StreamEvent,
+  Thread,
+  Todo,
+  TodoList,
+} from './types'
 
 const TOKEN_KEY = 'butler.token'
 
@@ -120,3 +129,31 @@ export const connectIntegration = (name: string) =>
 
 export const reloadAgent = () =>
   request<{ ok: boolean; agent_has_swiggy: boolean }>('/api/integrations/reload', { method: 'POST' })
+
+// --- Todos -------------------------------------------------------------------
+
+export type TodoStatus = 'open' | 'done' | 'all'
+
+export interface TodoInput {
+  title?: string
+  due?: string | null
+  clear_due?: boolean
+  list?: string
+  priority?: Priority
+  notes?: string
+  done?: boolean
+}
+
+export const listTodos = (status: TodoStatus) =>
+  request<{ todos: Todo[] }>(`/api/todos?status=${status}`)
+
+export const listTodoLists = () => request<{ lists: TodoList[] }>('/api/todos/lists')
+
+export const createTodo = (todo: TodoInput & { title: string }) =>
+  request<Todo>('/api/todos', { method: 'POST', body: JSON.stringify(todo) })
+
+export const updateTodo = (id: number, changes: TodoInput) =>
+  request<Todo>(`/api/todos/${id}`, { method: 'PATCH', body: JSON.stringify(changes) })
+
+export const deleteTodo = (id: number) =>
+  request<{ ok: boolean }>(`/api/todos/${id}`, { method: 'DELETE' })

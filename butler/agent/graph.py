@@ -8,7 +8,9 @@ from langgraph.graph import StateGraph, MessagesState, START
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from butler.config import OPENAI_MODEL
+from butler.integrations.calendar import CALENDAR_TOOLS
 from butler.integrations.gmail import GMAIL_TOOLS
+from butler.integrations.todos import TODO_TOOLS
 from butler.integrations.swiggy import load_swiggy_tools, services_of
 
 from .prompts import system_prompt
@@ -54,12 +56,13 @@ async def build_graph():
         print(f"WARNING: {swiggy_error}.{suffix}")
 
     # Every capability the agent has. Add new tool lists here.
-    all_tools = GMAIL_TOOLS + swiggy_tools
+    base_tools = GMAIL_TOOLS + CALENDAR_TOOLS + TODO_TOOLS   # available to every user
+    all_tools = base_tools + swiggy_tools
     swiggy_services = services_of(swiggy_tools)   # e.g. {"food", "instamart", "dineout"}
 
     # Users without Swiggy access never even see the Swiggy tools
     llm_with_swiggy = llm.bind_tools(all_tools)
-    llm_without_swiggy = llm.bind_tools(GMAIL_TOOLS)
+    llm_without_swiggy = llm.bind_tools(base_tools)
 
     async def agent(state: MessagesState, config: RunnableConfig):
         swiggy_enabled = bool(swiggy_tools) and config["configurable"].get(

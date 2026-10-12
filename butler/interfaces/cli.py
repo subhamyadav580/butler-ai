@@ -4,7 +4,7 @@ import asyncio
 
 from langgraph.types import Command
 
-from butler.agent import build_graph
+from butler.agent import build_graph, show_raw_args
 from butler.integrations.swiggy import format_args
 
 
@@ -30,9 +30,10 @@ def ask_user_to_pick(payload):
 def ask_user_to_confirm(payload):
     """Show a confirm_action interrupt; return the resume value."""
     print(f"\n⚠️  {payload['question']}")
-    print(format_args(payload["args"]))
     if payload.get("details"):
         print(payload["details"])
+    if show_raw_args(payload):
+        print(format_args(payload["args"]))
 
     answer = input("Approve? (y/n): ").strip().lower()
     return {"approved": answer in ("y", "yes")}

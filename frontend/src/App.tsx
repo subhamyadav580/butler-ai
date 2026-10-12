@@ -3,9 +3,10 @@ import * as api from './api'
 import { Chat } from './components/Chat'
 import { Integrations } from './components/Integrations'
 import { Login } from './components/Login'
+import { Todos } from './components/Todos'
 import { useThreads } from './hooks/useThreads'
 
-type View = 'chat' | 'integrations'
+type View = 'chat' | 'todos' | 'integrations'
 type AuthState = 'checking' | 'needs_login' | 'ok'
 
 export default function App() {
@@ -107,6 +108,15 @@ export default function App() {
         </nav>
 
         <button
+          className={`nav-link ${view === 'todos' ? 'active' : ''}`}
+          onClick={() => {
+            setView('todos')
+            setSidebarOpen(false)
+          }}
+        >
+          ☑ Todos
+        </button>
+        <button
           className={`nav-link ${view === 'integrations' ? 'active' : ''}`}
           onClick={() => {
             setView('integrations')
@@ -122,10 +132,10 @@ export default function App() {
           <button className="menu" aria-label="Open menu" onClick={() => setSidebarOpen((open) => !open)}>
             ☰
           </button>
-          <span>{view === 'chat' ? activeTitle : 'Integrations'}</span>
+          <span>{view === 'chat' ? activeTitle : view === 'todos' ? 'Todos' : 'Integrations'}</span>
         </header>
 
-        {view === 'chat' ? (
+        {view === 'chat' && (
           <Chat
             key={activeId}
             threadId={activeId}
@@ -133,9 +143,9 @@ export default function App() {
             onTurnFinished={onTurnFinished}
             onUnauthorized={onUnauthorized}
           />
-        ) : (
-          <Integrations onUnauthorized={onUnauthorized} />
         )}
+        {view === 'todos' && <Todos onUnauthorized={onUnauthorized} />}
+        {view === 'integrations' && <Integrations onUnauthorized={onUnauthorized} />}
       </main>
     </div>
   )

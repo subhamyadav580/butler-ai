@@ -2,10 +2,10 @@
 
 Everything Butler can *do* beyond talking is a **tool**: a function the LLM can call, with a name, a description, and typed arguments. To the agent, every tool looks the same: a LangChain `BaseTool` in the `all_tools` list. Behind that, Butler has two kinds.
 
-| | Python tools (Gmail) | MCP tools (Swiggy) |
+| | Python tools (Gmail, Calendar, Todos) | MCP tools (Swiggy) |
 |---|---|---|
 | Defined | In our code, with `@tool` | By the remote service, discovered at startup |
-| Runs | Our Python calling Google's API | A JSON-RPC call to `mcp.swiggy.com/{food,im,dineout}` |
+| Runs | Our Python calling Google's APIs, or Butler's own database (todos) | A JSON-RPC call to `mcp.swiggy.com/{food,im,dineout}` |
 | Sync/async | Sync, run in a thread by `ToolNode` | Async |
 | Wrapped by us | Not needed | Yes: access check, approvals, result cleanup, schema fix |
 | Code | [integrations/gmail/tools.py](../../butler/integrations/gmail/tools.py) | [integrations/swiggy/tools.py](../../butler/integrations/swiggy/tools.py) |

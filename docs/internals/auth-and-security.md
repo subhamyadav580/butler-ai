@@ -30,6 +30,10 @@ secrets/gmail_token.json  ── access token + refresh token
 - **Read-only scope:** Butler can't send or delete mail, even if the code had a bug.
 - **Testing-mode expiry:** while the Google app is in *Testing* mode, Google expires refresh tokens after about 7 days. Re-login, or publish the app.
 
+### Google Calendar
+
+Same flow as Gmail, through the shared helper [integrations/google_oauth.py](../../butler/integrations/google_oauth.py), with its own token (`secrets/calendar_token.json`) and scope (`calendar.events`: read and edit events). It uses the same `google_client_secret.json`; the Calendar API must be enabled in that Google Cloud project. Creating, changing and deleting events go through `interrupt()` approvals, and the card warns when Google will email guests.
+
 ### Swiggy: MCP OAuth 2.1 with PKCE
 
 Code: [integrations/swiggy/auth.py](../../butler/integrations/swiggy/auth.py)
@@ -88,20 +92,21 @@ Code: [interfaces/telegram_bot.py](../../butler/interfaces/telegram_bot.py)
 
 | Setting | Empty | Set |
 |---|---|---|
-| `TELEGRAM_ALLOWED_USER_IDS` | ⚠️ Anyone can use the bot and read your Gmail | Only these users; others are refused and shown their ID |
-| `TELEGRAM_OWNER_ID` | Every allowed user can use Swiggy | Only this user gets Swiggy tools |
+| `TELEGRAM_ALLOWED_USER_IDS` | Nobody can use the bot (deny by default) | Only these users; others are refused and shown their ID |
+| `TELEGRAM_OWNER_ID` | Every allowed user can use Swiggy | Only this user gets Swiggy tools and can approve Swiggy actions. Calendar and todo approvals stay open to every allowed user |
 
 Swiggy access is enforced twice. Users without access never have the Swiggy tools bound to the LLM, and every Swiggy tool also checks `swiggy_allowed` before running. Approve buttons check it too, which matters in group chats.
 
 ## Action safety
 
 - **Gmail:** read-only by scope.
+- **Calendar:** creating, changing and deleting events always need **Approve**. Guests are only emailed when an event has attendees, and the card says so.
 - **Swiggy:** every tool in `NEEDS_APPROVAL` always needs **Approve**: placing or confirming orders (Food, Instamart), booking a table (Dineout), confirming payments, adding or deleting addresses, and clearing carts. Rejecting, ignoring, or moving on never runs them. See [Human in the loop](human-in-the-loop.md).
 - **Errors:** tool failures become messages to the LLM, never crashes or partial actions.
 
 ## Checklist before sharing your instance
 
-- [ ] `TELEGRAM_ALLOWED_USER_IDS` set (if you run the bot)
+- [ ] `TELEGRAM_ALLOWED_USER_IDS` lists only people you trust (it's empty, meaning nobody, until you add IDs)
 - [ ] `TELEGRAM_OWNER_ID` set to yourself (if others use the bot)
 - [ ] `BUTLER_WEB_PASSWORD` set and HTTPS in front (if the web UI is reachable from other devices)
 - [ ] `secrets/`, `.env`, `data/` not committed (`git status` shows none of them)

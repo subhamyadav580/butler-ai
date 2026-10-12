@@ -22,9 +22,9 @@ Open your bot in Telegram and send `/start`. The reply ends with **your Telegram
 
 The bot only runs while this command runs. To keep it running all the time, see [Running it permanently](#running-it-permanently).
 
-## 3. Lock it down (important)
+## 3. Give yourself access
 
-Anyone can find a Telegram bot by its username. Without restrictions, **any stranger could read your mail through it**. Add your user ID to `.env`:
+Anyone can find a Telegram bot by its username, so Butler **denies everyone by default**: until you add your user ID, it answers every message with "Sorry, you're not allowed to use this bot", along with the sender's ID. Add yours to `.env`:
 
 ```
 # Only these Telegram users may use the bot (comma-separated)
@@ -34,23 +34,23 @@ TELEGRAM_ALLOWED_USER_IDS=123456789
 TELEGRAM_OWNER_ID=123456789
 ```
 
-Restart the bot. Anyone else now gets "Sorry, you're not allowed to use this bot", along with their own ID, in case you want to add them.
+Restart the bot. You now have access; anyone else still gets "Sorry, you're not allowed to use this bot", along with their own ID, in case you want to add them.
 
 | Setting | Empty means | Set means |
 |---|---|---|
-| `TELEGRAM_ALLOWED_USER_IDS` | ⚠️ Everyone can use the bot and read your Gmail | Only these users |
-| `TELEGRAM_OWNER_ID` | Every allowed user can use your Swiggy account | Only this user gets Swiggy; others still get Gmail and chat |
+| `TELEGRAM_ALLOWED_USER_IDS` | **Nobody** can use the bot | Only these users: they can read your Gmail and see and edit your calendar and todos |
+| `TELEGRAM_OWNER_ID` | Every allowed user can use your Swiggy account | Only this user gets Swiggy, and only they can approve Swiggy actions. Others still get Gmail, Calendar, Todos and chat |
 
 ## Using it
 
 - **Chat:** just type.
 - **Email picker:** tap the button for the email you want, type its number, or tap **Cancel**.
-- **Approvals:** tap **✅ Approve** or **❌ Reject**, or type `yes` / `no`.
+- **Approvals:** tap **✅ Approve** or **❌ Reject**, or type `yes` / `no`. This covers Swiggy orders and bookings, calendar changes and deleting todos.
 - **Changing your mind:** sending a new message while a question is open cancels the question.
 - **`/start`:** shows help and your user ID.
 - **`/reset`:** clears this chat's memory.
 
-Each Telegram chat has its own conversation memory.
+Each Telegram chat has its own conversation memory. **Todos** are shared with the web UI and the terminal: one list per Butler instance, stored in `data/butler.db`.
 
 ## Running it permanently
 

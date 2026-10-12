@@ -2,6 +2,26 @@
 
 import time
 
+CHAT_SCHEMA = """
+CREATE TABLE IF NOT EXISTS threads (
+    id          TEXT PRIMARY KEY,
+    title       TEXT NOT NULL,
+    created_at  REAL NOT NULL,
+    updated_at  REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    thread_id   TEXT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
+    role        TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+    content     TEXT NOT NULL,
+    created_at  REAL NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id, id);
+CREATE INDEX IF NOT EXISTS idx_threads_updated ON threads(updated_at DESC);
+"""
+
 
 class ThreadRepo:
     def __init__(self, db):

@@ -6,10 +6,10 @@ Butler has **two separate kinds of memory**, kept on purpose in two different pl
 |---|---|---|
 | **What it is** | The conversation **sent to the LLM** as context on every turn | The transcript **shown in the web UI's** sidebar and chat |
 | **Contains** | Your messages, Butler's replies, **tool calls and tool results**, any open picker or approval | Your messages and Butler's replies (text only) |
-| **Stored in** | RAM (LangGraph `InMemorySaver`) | SQLite (`data/butler.db`) |
+| **Stored in** | RAM (LangGraph `InMemorySaver`) | SQLite (`data/butler.db`, the same file as todos) |
 | **Survives a restart** | ❌ | ✅ |
 | **Used by** | All interfaces | Web UI only |
-| **Code** | [agent/graph.py](../../butler/agent/graph.py) | [web/services/chat_service.py](../../butler/web/services/chat_service.py), [web/repos/](../../butler/web/repos/), [web/db/](../../butler/web/db/) |
+| **Code** | [agent/graph.py](../../butler/agent/graph.py) | [web/services/chat_service.py](../../butler/web/services/chat_service.py), [web/repos/](../../butler/web/repos/), [db/](../../butler/db/) |
 
 ## Agent memory: the LLM's context
 
@@ -72,7 +72,7 @@ Tool results are stored in full, including email bodies of up to 4,000 character
 
 ### How they're stored
 
-Two tables in SQLite ([web/db/sqlite.py](../../butler/web/db/sqlite.py)):
+Two tables in SQLite, through the shared connection in [butler/db/sqlite.py](../../butler/db/sqlite.py); the schema lives with the repository in [web/repos/chat_repo.py](../../butler/web/repos/chat_repo.py):
 
 ```sql
 threads  (id TEXT PRIMARY KEY, title, created_at, updated_at)
@@ -97,6 +97,8 @@ Tool calls and results are **not** saved here; the transcript matches exactly wh
 - **`GET /api/chat/threads/{id}`:** the saved messages, plus any open question, which comes from *agent* memory.
 
 New chats are "drafts" in the browser until their first message, so empty chats never reach the database.
+
+> **Todos are neither.** They're data the user manages, stored in their own `todos` table in the same database, and readable from every interface. See [Todos](../integrations/todos.md).
 
 ## What happens after a restart
 

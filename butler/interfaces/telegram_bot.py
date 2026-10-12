@@ -14,12 +14,13 @@ from telegram.ext import (
     filters,
 )
 
-from butler.agent import build_graph, cancel_pending, pending_interrupt
+from butler.agent import build_graph, cancel_pending, pending_interrupt, show_raw_args
 from butler.config import (
     TELEGRAM_ALLOWED_USER_IDS as ALLOWED_USER_IDS,
     TELEGRAM_BOT_TOKEN as TOKEN,
     TELEGRAM_OWNER_ID as OWNER_ID,
 )
+from butler.integrations.swiggy import NEEDS_APPROVAL as SWIGGY_APPROVALS
 from butler.integrations.swiggy import format_args
 
 TELEGRAM_MAX_CHARS = 4096
@@ -42,6 +43,14 @@ def can_use_swiggy(user):
     return user is not None and user.id == OWNER_ID
 
 
+def may_answer(user, payload):
+    """Swiggy approvals act on the owner's account, so only Swiggy users may
+    approve them. Other approvals (calendar, todos) are open to any allowed user."""
+    if payload.get("type") == "confirm_action" and payload.get("tool") in SWIGGY_APPROVALS:
+        return can_use_swiggy(user)
+    return True
+
+
 def graph_config(update: Update):
     return {
         "configurable": {
@@ -53,10 +62,9 @@ def graph_config(update: Update):
 
 
 async def is_allowed(update: Update):
-    # No allow-list configured: open to everyone
-    if not ALLOWED_USER_IDS:
-        return True
-
+    # Deny by default: only IDs listed in TELEGRAM_ALLOWED_USER_IDS get in.
+    # With the list empty, nobody does (the reply still shows their ID, so
+    # the owner can find theirs and add it).
     user = update.effective_user
     if user and user.id in ALLOWED_USER_IDS:
         return True
@@ -100,9 +108,11 @@ async def send_pick_list(message, payload):
 
 
 async def send_confirm(message, payload):
-    text = f"⚠️ {payload['question']}\n\n{format_args(payload['args'])}"
+    text = f"⚠️ {payload['question']}"
     if payload.get("details"):
         text += f"\n\n{payload['details']}"
+    if show_raw_args(payload):
+        text += f"\n\n{format_args(payload['args'])}"
 
     await message.reply_text(
         text[:TELEGRAM_MAX_CHARS],
@@ -162,6 +172,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• show my latest 5 mails in updates\n"
         "• how many unread promotions do I have?\n"
         "• open a mail from LinkedIn\n"
+        "• what's on my calendar tomorrow?\n"
+        "• block 30 min for a call on Friday at 4 pm\n"
+        "• remind me to pay rent on Friday\n"
     )
     if can_use_swiggy(update.effective_user):
         examples += (
@@ -198,6 +211,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     payload = pending_interrupt(graph, config)
     if payload:
         answer = typed_answer(payload, text)
+        if answer and not may_answer(update.effective_user, payload):
+            await update.message.reply_text("Only the owner can approve Swiggy actions.")
+            return
         if answer:
             await run_agent(update.message, Command(resume=answer), config)
             return
@@ -251,9 +267,7 @@ async def handle_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    # In group chats anyone could tap the button; only Swiggy users may approve
-    if not await is_allowed(update) or not can_use_swiggy(update.effective_user):
-        await query.message.reply_text("You can't approve Swiggy actions.")
+    if not await is_allowed(update):
         return
 
     config = graph_config(update)
@@ -262,6 +276,11 @@ async def handle_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not payload or payload["type"] != "confirm_action":
         await query.edit_message_reply_markup(reply_markup=None)
         await query.message.reply_text("That request has expired — ask again.")
+        return
+
+    # In group chats anyone could tap the button
+    if not may_answer(update.effective_user, payload):
+        await query.message.reply_text("Only the owner can approve Swiggy actions.")
         return
 
     approved = query.data.removeprefix(CONFIRM_PREFIX) == "yes"
@@ -300,8 +319,8 @@ def main():
 
     if not ALLOWED_USER_IDS:
         print(
-            "WARNING: TELEGRAM_ALLOWED_USER_IDS is empty — anyone who finds "
-            "this bot can use it and read your Gmail."
+            "NOTE: TELEGRAM_ALLOWED_USER_IDS is empty, so the bot answers nobody. "
+            "Send /start to the bot to see your user ID, add it to .env, and restart."
         )
     if not OWNER_ID:
         print(

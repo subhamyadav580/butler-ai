@@ -1,6 +1,7 @@
 """Settings loaded from the environment / the project's .env file."""
 
 import os
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -24,17 +25,31 @@ GOOGLE_CLIENT_SECRET_FILE = Path(
     os.getenv("GOOGLE_CLIENT_SECRET_FILE", SECRETS_DIR / "google_client_secret.json")
 )
 GMAIL_TOKEN_FILE = SECRETS_DIR / "gmail_token.json"
+CALENDAR_TOKEN_FILE = SECRETS_DIR / "calendar_token.json"
 SWIGGY_TOKEN_FILE = SECRETS_DIR / "swiggy_token.json"
 
 # --- Telegram --------------------------------------------------------------
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
-# Empty = everyone may use the bot (and read your Gmail)
+# Only these Telegram user IDs may use the bot. Empty = nobody (deny by default)
 TELEGRAM_ALLOWED_USER_IDS = _int_set(os.getenv("TELEGRAM_ALLOWED_USER_IDS"))
 
 # Swiggy acts on YOUR account. Set to restrict it to one Telegram user;
 # empty = every allowed user gets Swiggy
 TELEGRAM_OWNER_ID = int(os.getenv("TELEGRAM_OWNER_ID") or 0)
+
+# --- Time zone ---------------------------------------------------------------
+# IANA name like "Asia/Kolkata". Empty = this machine's local time zone.
+TIMEZONE = os.getenv("BUTLER_TIMEZONE", "")
+
+
+def local_tz():
+    """The user's time zone: BUTLER_TIMEZONE, else the machine's local zone."""
+    if TIMEZONE:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo(TIMEZONE)
+    return datetime.now().astimezone().tzinfo
+
 
 # --- Swiggy ------------------------------------------------------------------
 # Which Swiggy services to load. Fewer services = fewer tools for the LLM to

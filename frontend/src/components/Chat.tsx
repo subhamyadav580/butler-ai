@@ -12,6 +12,20 @@ const TOOL_LABELS: Record<string, string> = {
   read_email: 'Reading the email',
   count_unread: 'Counting unread mail',
   inbox_overview: 'Checking your inbox',
+  // Google Calendar
+  list_calendar_events: 'Checking your calendar',
+  get_calendar_event: 'Loading the event',
+  find_free_time: 'Finding free time',
+  create_calendar_event: 'Adding the event',
+  update_calendar_event: 'Updating the event',
+  delete_calendar_event: 'Deleting the event',
+  // Todos
+  add_todo: 'Adding your todo',
+  list_todos: 'Checking your todos',
+  complete_todo: 'Updating your todo',
+  update_todo: 'Updating your todo',
+  delete_todo: 'Deleting your todo',
+  todo_lists: 'Checking your lists',
   // Swiggy Food
   food_get_addresses: 'Loading your Swiggy addresses',
   food_search_restaurants: 'Searching restaurants',
@@ -41,6 +55,8 @@ const TOOL_LABELS: Record<string, string> = {
 const EXAMPLES = [
   'How many unread mails do I have in Promotions?',
   'Open a mail from LinkedIn',
+  "What's on my calendar tomorrow?",
+  'Remind me to pay rent on Friday',
   'Find veg biryani near my office on Swiggy',
   'Order milk and bread on Instamart',
   'Book a table for 2 tonight in Connaught Place',

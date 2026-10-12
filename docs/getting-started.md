@@ -9,6 +9,7 @@ Each step is useful on its own, so you can stop after any of them.
 | [1. Install](#1-install) | Butler on your machine | 3 min |
 | [2. Add your OpenAI key](#2-add-your-openai-key) | A working chat for general questions | 1 min |
 | [3. Connect Gmail](#3-connect-gmail) | "How many unread mails…", "open the mail from…" | 8 min |
+| [3b. Connect Google Calendar](#3b-connect-google-calendar-optional) | "What's on tomorrow?", "block 30 min on Friday" | 2 min |
 | [4. Connect Swiggy](#4-connect-swiggy-optional) | Food delivery, Instamart groceries, Dineout tables (India) | 1 min |
 | [5. Pick an interface](#5-pick-an-interface) | Web UI, Telegram, or terminal | 2 min |
 
@@ -67,7 +68,7 @@ You: What's 18% of 2,450?
 AI: 18% of 2,450 is 441.
 ```
 
-Type `exit` to quit. Butler now works for general questions. If you ask about mail, it tells you Gmail isn't connected yet; that's expected.
+Type `exit` to quit. Butler now works for general questions and **todos** ("remind me to pay rent on Friday"), which need no setup. If you ask about mail, it tells you Gmail isn't connected yet; that's expected.
 
 ## 3. Connect Gmail
 
@@ -82,6 +83,16 @@ A browser opens. Sign in, allow read-only access, and you'll see:
 ```
 Gmail connected: you@gmail.com
 ```
+
+## 3b. Connect Google Calendar (optional)
+
+Calendar uses the same Google client as Gmail. In the same Google Cloud project, [enable the Google Calendar API](https://console.cloud.google.com/apis/library/calendar-json.googleapis.com), then:
+
+```bash
+python -m butler calendar-login
+```
+
+Allow access to calendar events in the browser. See **[the Calendar guide](integrations/calendar.md)**.
 
 ## 4. Connect Swiggy (optional)
 
@@ -111,7 +122,7 @@ Open **http://127.0.0.1:8000**. The **Integrations** page shows what's connected
 1. Message [@BotFather](https://t.me/BotFather), send `/newbot`, and copy the token.
 2. Add it to `.env`: `TELEGRAM_BOT_TOKEN=123456:ABC...`
 3. Run `python -m butler telegram`, open your bot in Telegram, and send `/start`.
-4. Lock the bot down to yourself. This matters: it can read your mail. See [the Telegram guide](interfaces/telegram.md).
+4. The bot answers nobody until you allow yourself: the `/start` reply shows your user ID; add it to `TELEGRAM_ALLOWED_USER_IDS` in `.env` and restart. See [the Telegram guide](interfaces/telegram.md).
 
 ### Terminal
 
@@ -128,6 +139,11 @@ How many unread mails do I have in Promotions?
 Show my latest 5 mails from LinkedIn in Updates
 Open a mail from Amazon                          ← shows a picker
 Any mail with attachments from last week?
+Remind me to pay rent on Friday                  ← todos work with no setup
+What's on my list?
+What's on my calendar tomorrow?
+Find me a free hour on Thursday
+Block 30 min for a call on Friday at 4 pm       ← asks you to Approve
 Which addresses do I have saved on Swiggy?
 Find veg biryani near my Office                  ← uses your saved address
 Add 1 of the first one to my cart

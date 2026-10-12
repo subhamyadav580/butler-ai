@@ -6,10 +6,10 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from butler.config import DATABASE_PATH, FRONTEND_DIST
-from butler.web.db import Database
-from butler.web.repos import MessageRepo, ThreadRepo
-from butler.web.routes import auth, chat, integrations
+from butler.config import FRONTEND_DIST
+from butler.db import get_database
+from butler.web.repos import CHAT_SCHEMA, MessageRepo, ThreadRepo
+from butler.web.routes import auth, chat, integrations, todos
 from butler.web.services.agent_service import AgentService
 from butler.web.services.chat_service import ChatService
 from butler.web.services.integration_service import IntegrationService
@@ -26,8 +26,8 @@ async def lifespan(app: FastAPI):
             await agent_service.reload()
 
     # Chat list + transcripts persist in SQLite; agent memory stays in RAM
-    database = Database(DATABASE_PATH)
-    database.init_schema()
+    database = get_database()
+    database.apply_schema(CHAT_SCHEMA)
 
     app.state.agent_service = agent_service
     app.state.chat_service = ChatService(
@@ -44,6 +44,7 @@ def create_app():
     app.include_router(auth.router)
     app.include_router(chat.router)
     app.include_router(integrations.router)
+    app.include_router(todos.router)
 
     @app.get("/api/health")
     async def health():

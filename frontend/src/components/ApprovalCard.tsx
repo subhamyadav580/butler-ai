@@ -7,13 +7,17 @@ interface Props {
 }
 
 export function ApprovalCard({ payload, disabled, onAnswer }: Props) {
-  const args = Object.keys(payload.args).length ? JSON.stringify(payload.args, null, 2) : null
+  // Same rule as butler/agent/human.py show_raw_args(): calendar and todo
+  // approvals have a readable summary; Swiggy's raw args add payment details
+  const isSwiggy = /^(food|instamart|dineout)_/.test(payload.tool)
+  const showArgs = Object.keys(payload.args).length > 0 && (!payload.details || isSwiggy)
+  const args = showArgs ? JSON.stringify(payload.args, null, 2) : null
 
   return (
     <div className="card warning">
       <div className="card-title">⚠️ {payload.question}</div>
-      {args && <pre className="code">{args}</pre>}
       {payload.details && <pre className="code details">{payload.details}</pre>}
+      {args && <pre className="code">{args}</pre>}
       <div className="card-actions">
         <button className="btn ghost" disabled={disabled} onClick={() => onAnswer(false)}>
           Reject

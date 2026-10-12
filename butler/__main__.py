@@ -4,6 +4,7 @@
     python -m butler telegram       # run the Telegram bot
     python -m butler web            # run the web UI (http://127.0.0.1:8000)
     python -m butler gmail-login    # connect Gmail (Google login in the browser)
+    python -m butler calendar-login # connect Google Calendar
     python -m butler swiggy-login   # connect Swiggy (phone + OTP in the browser)
     python -m butler gmail [...]    # quick Gmail reader, e.g. `gmail updates --unread`
 """
@@ -11,7 +12,7 @@
 import asyncio
 import sys
 
-COMMANDS = ("chat", "telegram", "web", "gmail-login", "swiggy-login", "gmail")
+COMMANDS = ("chat", "telegram", "web", "gmail-login", "calendar-login", "swiggy-login", "gmail")
 
 
 def main():
@@ -40,6 +41,10 @@ def main():
     elif command == "gmail-login":
         from butler.integrations.gmail import login as gmail_login
         gmail_login.main()
+
+    elif command == "calendar-login":
+        from butler.integrations.calendar import login as calendar_login
+        calendar_login.main()
 
     elif command == "swiggy-login":
         from butler.integrations.swiggy import login

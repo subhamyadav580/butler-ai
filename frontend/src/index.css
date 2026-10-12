@@ -661,3 +661,169 @@ pre {
     padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* --- Todos --------------------------------------------------------------- */
+
+.todo-add {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 18px 0 12px;
+}
+
+.todo-add input,
+.todo-add select {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  min-width: 0;
+}
+
+.todo-title-input {
+  font-size: 1rem;
+}
+
+.todo-add-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.todo-add-options input[list] {
+  flex: 1 1 140px;
+}
+
+.todo-add-options button {
+  margin-left: auto;
+}
+
+.todo-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.todo-group h2 {
+  font-size: 1rem;
+  margin: 18px 0 6px;
+}
+
+.todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.todo {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.todo:last-child {
+  border-bottom: 0;
+}
+
+.todo input[type='checkbox'] {
+  margin-top: 4px;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+  flex: none;
+}
+
+.todo-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.todo-title {
+  overflow-wrap: anywhere;
+}
+
+.todo.done .todo-title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.todo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.todo-notes {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.overdue {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.prio.high {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+
+.todo-delete {
+  visibility: hidden;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0 4px;
+}
+
+.todo:hover .todo-delete,
+.todo-delete:focus-visible {
+  visibility: visible;
+}
+
+@media (hover: none) {
+  .todo-delete {
+    visibility: visible;
+  }
+}
+
+.empty-todos {
+  margin-top: 24px;
+}

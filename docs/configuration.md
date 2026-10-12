@@ -25,6 +25,12 @@ Real environment variables take priority over `.env`.
 | `BUTLER_WEB_PORT` | `8000` | Port |
 | `BUTLER_WEB_PASSWORD` | (empty: no login) | Require this password in the UI. **Set it whenever the host isn't `127.0.0.1`** |
 
+### Time zone
+
+| Variable | Default | Description |
+|---|---|---|
+| `BUTLER_TIMEZONE` | (this machine's zone) | IANA name, for example `Asia/Kolkata`. Used for calendar times and "today" or "tomorrow". Set it if Butler runs in a different zone from you |
+
 ### Swiggy
 
 | Variable | Default | Description |
@@ -36,15 +42,15 @@ Real environment variables take priority over `.env`.
 | Variable | Default | Description |
 |---|---|---|
 | `TELEGRAM_BOT_TOKEN` | (required for Telegram) | Token from [@BotFather](https://t.me/BotFather) |
-| `TELEGRAM_ALLOWED_USER_IDS` | (empty: ⚠️ everyone) | Comma-separated Telegram user IDs allowed to use the bot |
+| `TELEGRAM_ALLOWED_USER_IDS` | (empty: nobody) | Comma-separated Telegram user IDs allowed to use the bot. Send `/start` to the bot to see yours |
 | `TELEGRAM_OWNER_ID` | (empty: all allowed users) | The only user who may use Swiggy |
 
 ### Paths
 
 | Variable | Default | Description |
 |---|---|---|
-| `BUTLER_DATA_DIR` | `./data` | Folder for the chat database (`butler.db`) |
-| `BUTLER_DATABASE_PATH` | `<data>/butler.db` | The web UI's SQLite database of chats and messages |
+| `BUTLER_DATA_DIR` | `./data` | Folder for Butler's database (`butler.db`) |
+| `BUTLER_DATABASE_PATH` | `<data>/butler.db` | SQLite database: web UI chats, plus todos (shared by all interfaces) |
 | `BUTLER_SECRETS_DIR` | `./secrets` | Folder for OAuth clients and tokens |
 | `GOOGLE_CLIENT_SECRET_FILE` | `<secrets>/google_client_secret.json` | Your Google OAuth client file |
 
@@ -56,6 +62,7 @@ None of these are ever committed; the folder is git-ignored.
 |---|---|---|
 | `google_client_secret.json` | You download it ([Gmail guide](integrations/gmail.md)) | Your Google OAuth client |
 | `gmail_token.json` | `gmail-login` | Gmail access token and refresh token |
+| `calendar_token.json` | `calendar-login` | Google Calendar access token and refresh token |
 | `swiggy_token.json` | `swiggy-login` | Swiggy access token for all services (lasts 5 days) and registered client |
 
 Back the folder up if you move Butler to another machine. Delete a token file to disconnect that account.

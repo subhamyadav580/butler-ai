@@ -28,6 +28,28 @@ That's expected: it's your own app. Click **Continue**.
 **Gmail worked for a week, then fails with `invalid_grant`**
 Apps in Google's *Testing* mode get logins that expire after about 7 days. Run `python -m butler gmail-login` again, or publish the app (see the [Gmail guide](integrations/gmail.md#good-to-know)).
 
+## Todos
+
+**Todos added on Telegram don't show on the Todos page**
+The page refreshes when you return to the tab. Click another tab and back, or reload. Both processes must point to the same `data/butler.db` (the same `BUTLER_DATABASE_PATH`).
+
+**"remind me…" didn't notify me**
+Butler doesn't send notifications yet. Ask it to also put the reminder on your Google Calendar, which can alert you.
+
+## Google Calendar
+
+**`calendar-login` says the Google Calendar API is not enabled**
+Enable it in the same Google Cloud project as your OAuth client: [Google Calendar API](https://console.cloud.google.com/apis/library/calendar-json.googleapis.com) → **Enable**. Then run `python -m butler calendar-login` again.
+
+**Times are off by a few hours**
+Butler is using a different time zone from you, which is common on servers. Set `BUTLER_TIMEZONE=Asia/Kolkata` (your zone) in `.env` and restart.
+
+**"Google Calendar login has expired"**
+Same 7-day Testing-mode limit as Gmail. Run `python -m butler calendar-login`, or publish your Google app.
+
+**An event from a shared or secondary calendar is missing**
+Butler only reads your primary calendar for now.
+
 ## Swiggy
 
 **"Swiggy login has expired"**

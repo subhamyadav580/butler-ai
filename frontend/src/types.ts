@@ -45,6 +45,28 @@ export interface Thread {
   updated_at: number
 }
 
+export type Priority = 'low' | 'normal' | 'high'
+
+export interface Todo {
+  id: number
+  title: string
+  notes: string | null
+  list: string
+  priority: Priority
+  due: string | null
+  due_human: string | null
+  overdue: boolean
+  done: boolean
+  created_at: number
+  completed_at: number | null
+}
+
+export interface TodoList {
+  name: string
+  open: number
+  done: number
+}
+
 export interface IntegrationStatus {
   name: string
   title: string

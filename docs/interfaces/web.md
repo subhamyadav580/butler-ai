@@ -29,13 +29,15 @@ Rebuild the frontend (`npm run build`) after you pull updates that change `front
 - **Conversations:** **+ New chat** starts a fresh conversation. Earlier ones are listed in the sidebar. **Double-click** a title to rename it; the **×** deletes it.
 - **Email picker:** when you ask to open an email, Butler shows a list. Click one to read it, or **Cancel**.
 - **Approvals:** before Butler places an order, changes an address or clears your cart, it shows a card with the details and **Approve / Reject**.
-- **Integrations:** shows whether Gmail and Swiggy are connected, how long the Swiggy login has left, which Swiggy services are loaded, and a **Connect** or **Reconnect** button.
+- **Todos:** your todo list, grouped by list. Add, tick off, filter and delete. See [Todos](../integrations/todos.md).
+- **Integrations:** shows whether Gmail, Calendar and Swiggy are connected, how long the Swiggy login has left, which Swiggy services are loaded, and a **Connect** or **Reconnect** button.
 
 ## Where chats are stored
 
 | What | Where | After a restart |
 |---|---|---|
 | The sidebar list and every chat's messages | SQLite at `data/butler.db` | ✅ Still there, on every device and browser |
+| Todos | The same database | ✅ Kept, and shared with Telegram and the terminal |
 | Butler's working memory (tool results, an open picker or approval) | RAM | ❌ Starts fresh |
 
 So after restarting Butler you can open and read any old chat, but Butler doesn't remember its earlier context; it continues from your next message. A new chat is only saved once you send its first message, so empty chats never pile up.
@@ -46,7 +48,7 @@ To back up your chat history, copy `data/butler.db`. To wipe it, stop Butler and
 
 Clicking **Connect** runs the same login as the CLI commands. The login window opens in a browser **on the machine running Butler**. That's normal for a self-hosted app: the person running the server is the person whose accounts get connected.
 
-If Butler runs on a remote server with no browser, connect on your laptop instead (`gmail-login`, `swiggy-login`) and copy the `secrets/` folder to the server.
+If Butler runs on a remote server with no browser, connect on your laptop instead (`gmail-login`, `calendar-login`, `swiggy-login`) and copy the `secrets/` folder to the server.
 
 ## Protecting it
 
@@ -84,8 +86,13 @@ The UI is a thin client over a small JSON API. FastAPI serves interactive docs a
 | `GET` | `/api/chat/threads/{id}` | Saved messages, plus any open question |
 | `PATCH` | `/api/chat/threads/{id}` | Rename: `{"title": "..."}` |
 | `DELETE` | `/api/chat/threads/{id}` | Delete a conversation and its messages |
+| `GET` | `/api/todos?status=open\|done\|all` | Todos, open first and by due date |
+| `POST` | `/api/todos` | Add: `{"title", "due"?, "list"?, "priority"?, "notes"?}` |
+| `PATCH` | `/api/todos/{id}` | Change fields, or `{"done": true}` |
+| `DELETE` | `/api/todos/{id}` | Delete a todo |
+| `GET` | `/api/todos/lists` | Lists with open and done counts |
 | `GET` | `/api/integrations` | Connection status |
-| `POST` | `/api/integrations/{name}/connect` | Start a login (`gmail`, `swiggy`) |
+| `POST` | `/api/integrations/{name}/connect` | Start a login (`gmail`, `calendar`, `swiggy`) |
 | `POST` | `/api/integrations/reload` | Reload the agent's tools |
 | `GET` | `/api/auth/status`, `POST /api/auth/login` | Password login |
 

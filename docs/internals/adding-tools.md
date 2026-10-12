@@ -46,7 +46,7 @@ Optionally, if the tool needs workflow guidance the description can't give, add 
 
 ## 2. Add a new integration
 
-Example: **Google Calendar**, read-only. Follow the Gmail layout so everything stays consistent.
+Example: **Google Calendar**. This is now implemented, so use [`butler/integrations/calendar/`](../../butler/integrations/calendar/) as the reference while reading. The steps below are how it was built and apply to any new Python integration, such as Google Tasks or Notion.
 
 ### 2.1 Files
 
@@ -81,7 +81,7 @@ LOGIN_COMMAND = "python -m butler calendar-login"
 
 ### 2.3 Auth: the one rule that matters
 
-Copy [gmail/auth.py](../../butler/integrations/gmail/auth.py) and keep its key behaviour:
+For Google services, call the shared [google_oauth.get_credentials()](../../butler/integrations/google_oauth.py) (Gmail and Calendar both do). For other services, keep the same key behaviour:
 
 ```python
 def get_calendar_service(interactive=False):

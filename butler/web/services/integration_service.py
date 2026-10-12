@@ -11,7 +11,9 @@ import time
 
 from google.oauth2.credentials import Credentials
 
-from butler.config import GMAIL_TOKEN_FILE, GOOGLE_CLIENT_SECRET_FILE
+from butler.config import CALENDAR_TOKEN_FILE, GMAIL_TOKEN_FILE, GOOGLE_CLIENT_SECRET_FILE
+from butler.integrations.calendar import Calendar
+from butler.integrations.calendar.config import SCOPES as CALENDAR_SCOPES
 from butler.integrations.gmail.auth import get_gmail_service
 from butler.integrations.gmail.config import SCOPES as GMAIL_SCOPES
 from butler.integrations.swiggy import get_swiggy_tools, smoke_test
@@ -36,7 +38,11 @@ class IntegrationService:
 
     def list_status(self, swiggy_services):
         """swiggy_services: the Swiggy services the running agent has loaded."""
-        return [self._gmail_status(), self._swiggy_status(set(swiggy_services))]
+        return [
+            self._gmail_status(),
+            self._calendar_status(),
+            self._swiggy_status(set(swiggy_services)),
+        ]
 
     def _common(self, name):
         return {
@@ -68,6 +74,25 @@ class IntegrationService:
             if creds.valid or creds.refresh_token:
                 return {**status, "state": "connected", "detail": "Connected."}
 
+        return {**status, "state": "disconnected", "detail": "Not connected yet."}
+
+    def _calendar_status(self):
+        status = {
+            "name": "calendar",
+            "title": "Google Calendar",
+            "description": "See your schedule, find free time, and add, move or cancel events.",
+            **self._common("calendar"),
+        }
+        if not GOOGLE_CLIENT_SECRET_FILE.exists():
+            return {
+                **status,
+                "state": "needs_setup",
+                "detail": "Set up the Google OAuth client first (same as Gmail). See the README.",
+            }
+        if CALENDAR_TOKEN_FILE.exists():
+            creds = Credentials.from_authorized_user_file(str(CALENDAR_TOKEN_FILE), CALENDAR_SCOPES)
+            if creds.valid or creds.refresh_token:
+                return {**status, "state": "connected", "detail": "Connected."}
         return {**status, "state": "disconnected", "detail": "Not connected yet."}
 
     def _swiggy_status(self, loaded):
@@ -107,7 +132,11 @@ class IntegrationService:
 
     def connect(self, name):
         """Start the login flow in the background; returns immediately."""
-        flows = {"gmail": self._connect_gmail, "swiggy": self._connect_swiggy}
+        flows = {
+            "gmail": self._connect_gmail,
+            "calendar": self._connect_calendar,
+            "swiggy": self._connect_swiggy,
+        }
         if name not in flows:
             raise UnknownIntegration(name)
 
@@ -136,6 +165,12 @@ class IntegrationService:
         await asyncio.to_thread(
             lambda: service.users().getProfile(userId="me").execute()
         )
+
+    async def _connect_calendar(self):
+        if not GOOGLE_CLIENT_SECRET_FILE.exists():
+            raise RuntimeError("Google OAuth client file is missing; see README.")
+        # Opens a browser on this machine; then one read to prove the API works
+        await asyncio.to_thread(lambda: Calendar(interactive=True).profile())
 
     async def _connect_swiggy(self):
         # Opens a browser on this machine for phone + OTP, saves the token

@@ -34,6 +34,7 @@ The conversation lasts for the session and is forgotten when you quit.
 
 ```bash
 python -m butler gmail-login     # Google login in the browser
+python -m butler calendar-login  # Google Calendar
 python -m butler swiggy-login    # phone number + OTP in the browser
 ```
 
@@ -62,7 +63,7 @@ python -m butler gmail starred --attachment
 ## All commands
 
 ```bash
-python -m butler web | telegram | chat | gmail-login | swiggy-login | gmail
+python -m butler web | telegram | chat | gmail-login | calendar-login | swiggy-login | gmail
 ```
 
 After `pip install -e .`, the shorter `butler <command>` works too.
