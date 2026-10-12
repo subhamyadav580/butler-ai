@@ -28,7 +28,7 @@ Butler is open source and runs on your own machine. You connect **your own** acc
 
 | | |
 |---|---|
-| 📬 **Gmail** (read-only) | List, search and filter mail by tab (Primary, Promotions, Updates, …), sender, subject, date or unread; count unread mail; open any email |
+| 📬 **Gmail** | List, search and filter mail by tab (Primary, Promotions, Updates, …), sender, subject, date or unread; count unread mail; open any email. Optionally **reply, send and save drafts**, with your Approve before anything is sent |
 | 📅 **Google Calendar** | See your schedule, find free time, add, move or cancel events (with Meet links and guests) |
 | 🔎 **Web search** | News, live scores, prices, facts, with sources cited. Serper, Tavily and Firecrawl, with automatic fallback |
 | ☑️ **Todos** | Butler's own todo list: due dates, lists, priorities; a Todos page in the web UI. No setup |
@@ -116,7 +116,7 @@ Butler acts on **your** accounts, so treat it like a password manager:
 ## Project status and limitations
 
 - **Agent memory is in-process:** web chats are saved (sidebar and transcripts survive restarts), but after a restart Butler doesn't remember the earlier context of a chat. Telegram and terminal chats aren't saved.
-- **Gmail is read-only:** no sending or deleting. **Calendar** covers your primary calendar only.
+- **Gmail:** sending is off until you switch it on, and never deletes or archives. **Calendar** covers your primary calendar only.
 - **Swiggy:** India only. Food, Instamart and Dineout are supported (not Scenes yet). Logins last 5 days, and Dineout paid deals and cancellations need the Swiggy app.
 - **Model choice:** works with `gpt-4o-mini`, but with everything enabled (60+ tools, most of them Swiggy) **`gpt-4.1-mini` is recommended**. It's much more reliable at carts and bookings. Set `OPENAI_MODEL`, or trim with `SWIGGY_SERVICES`.
 

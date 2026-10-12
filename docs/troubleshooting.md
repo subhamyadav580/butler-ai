@@ -104,8 +104,8 @@ Build it: `cd frontend && npm install && npm run build`, then restart `python -m
 **`Address already in use` on port 8000**
 Something else is using the port. Set `BUTLER_WEB_PORT=8080` in `.env`.
 
-**"Connect" does nothing visible**
-The login window opens in a browser **on the machine running Butler**. On a remote server, log in on your laptop instead and copy `secrets/` over.
+**"Connect" or "Reconnect" does nothing visible**
+The login window opens in a browser **on the machine running Butler**; check for a new browser tab there, and restart Butler if it predates this version. If the card shows an error under it, that's the reason the login failed. On a remote server, log in on your laptop instead and copy `secrets/` over.
 
 **Butler forgot what we talked about after a restart**
 Expected. Your chats and their messages are saved (`data/butler.db`), but Butler's working memory is kept in the running process. Restarting, or reconnecting Swiggy (which reloads the agent), clears it, so Butler continues an old chat from your next message.

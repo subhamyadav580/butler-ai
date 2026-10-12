@@ -118,6 +118,55 @@ class Gmail:
         }
 
     # ------------------------------------------------------------------
+    # Writing (needs the compose permission; see auth.py)
+    # ------------------------------------------------------------------
+
+    @property
+    def send_service(self):
+        # Separate from `service`: reading keeps working with a read-only token
+        if getattr(self._local, "send_service", None) is None:
+            self._local.send_service = get_gmail_service(
+                self.credentials_file, self.token_file,
+                interactive=self.interactive, send=True,
+            )
+        return self._local.send_service
+
+    def my_address(self):
+        return self.service.users().getProfile(userId="me").execute()["emailAddress"]
+
+    def reply_context(self, email_id):
+        """The headers a reply needs from the original message."""
+        msg = self.service.users().messages().get(
+            userId="me", id=email_id, format="metadata",
+            metadataHeaders=["From", "Reply-To", "To", "Cc", "Subject", "Message-ID", "References"],
+        ).execute()
+        headers = {h["name"].lower(): h["value"] for h in msg["payload"].get("headers", [])}
+        return {
+            "thread_id": msg["threadId"],
+            "from": headers.get("from", ""),
+            "reply_to": headers.get("reply-to"),
+            "to": headers.get("to", ""),
+            "cc": headers.get("cc"),
+            "subject": headers.get("subject", ""),
+            "message_id": headers.get("message-id"),
+            "references": headers.get("references"),
+        }
+
+    def send_raw(self, raw, thread_id=None):
+        body = {"raw": raw}
+        if thread_id:
+            body["threadId"] = thread_id
+        return self.send_service.users().messages().send(userId="me", body=body).execute()
+
+    def create_draft(self, raw, thread_id=None):
+        message = {"raw": raw}
+        if thread_id:
+            message["threadId"] = thread_id
+        return self.send_service.users().drafts().create(
+            userId="me", body={"message": message}
+        ).execute()
+
+    # ------------------------------------------------------------------
     # Category shortcuts
     # ------------------------------------------------------------------
 

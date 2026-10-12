@@ -5,13 +5,13 @@ Run from the project root:
 """
 
 from .auth import GmailLoginRequired
-from .client import Gmail
 
 
 def main():
     try:
-        gmail = Gmail(interactive=True)
-        profile = gmail.service.users().getProfile(userId="me").execute()
+        from .auth import get_gmail_service
+        service = get_gmail_service(interactive=True, force_login=True)
+        profile = service.users().getProfile(userId="me").execute()
     except GmailLoginRequired as error:
         raise SystemExit(str(error)) from error
     print(f"Gmail connected: {profile['emailAddress']}")

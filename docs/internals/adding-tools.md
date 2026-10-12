@@ -150,6 +150,7 @@ What each part does:
 | `can_connect`, `connect()` | the **Connect** button on the Integrations page | no button |
 | `reload_on_connect` | rebuild the agent after connecting (tools that load at startup) | `False` |
 | `cli_commands` | extra CLI commands, like Gmail's `gmail` reader | none |
+| `options()`, `set_option()` | on/off switches on its card (Gmail: **Allow replying & sending**). Store values with `butler.db.get_settings()` so every process sees changes at once; read them inside tools or `rules()` so they apply without a restart | no switches |
 
 **Logins:** never open a browser from a tool. Follow the Gmail pattern: `interactive=False` raises "not connected, run `notes-login`", and only `login()` and `connect()` may open a browser. For Google services, use the shared [google_oauth.py](../../butler/integrations/google_oauth.py) (`get_credentials` and `google_status`).
 

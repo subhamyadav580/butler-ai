@@ -9,7 +9,7 @@ Code: [agent/human.py](../../butler/agent/human.py), the tools that raise interr
 | `type` | Raised by | Payload | Resume value |
 |---|---|---|---|
 | `pick_email` | `pick_email` tool | `question`, `emails: [{id, from, subject, snippet, unread, …}]` | `{"email_id": "<id>"}`, or `{"email_id": null}` to cancel |
-| `confirm_action` | Swiggy tools in `NEEDS_APPROVAL` (Food, Instamart and Dineout orders, bookings, address changes, clearing carts) | `question` (for example "Book this table on Swiggy Dineout?"), `tool`, `args`, `details` (cart or booking preview) | `{"approved": true \| false}` |
+| `confirm_action` | Gmail `reply_to_email` and `send_email`, Calendar changes, `delete_todo`, and Swiggy tools in `NEEDS_APPROVAL` (Food, Instamart and Dineout orders, bookings, address changes, clearing carts) | `question` (for example "Book this table on Swiggy Dineout?"), `tool`, `args`, `details` (cart or booking preview) | `{"approved": true \| false}` |
 
 ## How a pause works
 

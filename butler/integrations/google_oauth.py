@@ -25,8 +25,18 @@ def get_credentials(
     service_name,
     login_command,
     error_cls=GoogleLoginRequired,
+    login_scopes=None,
+    force_login=False,
 ):
     """Load, refresh or (if interactive) create Google credentials.
+
+    scopes: what this call needs. The saved token must have granted all of
+    them; a token from an earlier, narrower login (e.g. read-only Gmail when
+    sending is now needed) counts as "needs a new login".
+    login_scopes: what to ask for if a new login happens (defaults to scopes).
+    Lets a read-only call keep working while logins ask for more.
+    force_login: always open a fresh login (interactive only). The web UI's
+    Reconnect and the `*-login` commands use it.
 
     interactive=True may open a browser for the Google login (CLI login
     commands, the web UI's Connect button). interactive=False (the agent's
@@ -37,9 +47,24 @@ def get_credentials(
         f"Run `{login_command}` or use Connect on the web UI's Integrations page."
     )
 
+    login_scopes = login_scopes or scopes
+
     creds = None
-    if os.path.exists(token_file):
-        creds = Credentials.from_authorized_user_file(token_file, scopes)
+    if interactive and force_login:
+        pass                                    # skip the saved token: log in again
+    elif os.path.exists(token_file):
+        # Load with the scopes the token was actually granted, not the ones we
+        # want: forcing new scopes onto an old token only fails later with a 403
+        creds = Credentials.from_authorized_user_file(token_file)
+        # Interactive logins also re-login when the token lacks access that's now
+        # wanted (e.g. sending was switched on after a read-only login)
+        if not creds.has_scopes(scopes if not interactive else login_scopes):
+            if not interactive:
+                raise error_cls(
+                    f"{service_name} needs more permission for this. Reconnect it "
+                    f"(Integrations page, or `{login_command}`) and allow the new access."
+                )
+            creds = None    # log in again with the wider scopes
 
     if creds and creds.valid:
         return creds
@@ -64,7 +89,7 @@ def get_credentials(
             "See docs/integrations/gmail.md for the one-time Google setup."
         )
 
-    flow = InstalledAppFlow.from_client_secrets_file(credentials_file, scopes)
+    flow = InstalledAppFlow.from_client_secrets_file(credentials_file, login_scopes)
     creds = flow.run_local_server(port=0)
     _save(token_file, creds)
     return creds
@@ -76,8 +101,12 @@ def _save(token_file, creds):
     os.chmod(token_file, 0o600)
 
 
-def google_status(token_file, scopes, client_file, service_name):
-    """Integrations-page status for a Google integration (quick: no network)."""
+def google_status(token_file, scopes, client_file, service_name, wanted_scopes=None, wanted_reason=""):
+    """Integrations-page status for a Google integration (quick: no network).
+
+    wanted_scopes: extra access an enabled option needs (e.g. Gmail sending);
+    if the token lacks it, the status says to Reconnect.
+    """
     if not os.path.exists(client_file):
         return {
             "state": "needs_setup",
@@ -88,7 +117,10 @@ def google_status(token_file, scopes, client_file, service_name):
             ),
         }
     if os.path.exists(token_file):
-        creds = Credentials.from_authorized_user_file(token_file, scopes)
-        if creds.valid or creds.refresh_token:
+        creds = Credentials.from_authorized_user_file(token_file)
+        if (creds.valid or creds.refresh_token) and creds.has_scopes(scopes):
+            if wanted_scopes and not creds.has_scopes(wanted_scopes):
+                return {"state": "connected",
+                        "detail": f"Connected (read-only). {wanted_reason} Click Reconnect and allow the new access."}
             return {"state": "connected", "detail": "Connected."}
     return {"state": "disconnected", "detail": f"{service_name} is not connected yet."}

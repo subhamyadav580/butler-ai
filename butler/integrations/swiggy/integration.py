@@ -175,9 +175,16 @@ class SwiggyIntegration(Integration):
         return status
 
     async def connect(self):
-        # Opens a browser on this machine for phone + OTP, saves the token
-        tools = await get_swiggy_tools(interactive=True)
-        await smoke_test(tools)
+        # Always opens a fresh phone + OTP login in a browser on this machine.
+        # If it fails or is cancelled, the previous login is put back.
+        storage = FileTokenStorage()
+        previous = storage.take_tokens()
+        try:
+            tools = await get_swiggy_tools(interactive=True)
+            await smoke_test(tools)
+        except BaseException:
+            storage.put_back(previous)
+            raise
 
     def login(self):
         import asyncio

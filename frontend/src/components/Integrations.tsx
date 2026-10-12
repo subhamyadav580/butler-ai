@@ -46,6 +46,21 @@ export function Integrations({ onUnauthorized }: { onUnauthorized: () => void })
     }
   }
 
+  const setOption = async (name: string, key: string, value: boolean) => {
+    // Optimistic: flip the switch now, then reload statuses from the server
+    setItems((all) =>
+      all.map((i) =>
+        i.name === name ? { ...i, options: i.options.map((o) => (o.key === key ? { ...o, value } : o)) } : i,
+      ),
+    )
+    try {
+      await api.setIntegrationOption(name, key, value)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+    await refresh()
+  }
+
   const reload = async () => {
     setReloading(true)
     try {
@@ -87,6 +102,28 @@ export function Integrations({ onUnauthorized }: { onUnauthorized: () => void })
             <p>{item.description}</p>
             <p className="muted small">{item.detail}</p>
             {item.error && <p className="error small">{item.error}</p>}
+            {item.options.length > 0 && (
+              <ul className="provider-list options">
+                {item.options.map((option) => (
+                  <li key={option.key} className="provider">
+                    <div className="provider-info">
+                      <span className="provider-title">{option.label}</span>
+                      {option.description && <span className="muted small">{option.description}</span>}
+                    </div>
+                    <label className="switch">
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        checked={option.value}
+                        onChange={(e) => void setOption(item.name, option.key, e.target.checked)}
+                        aria-label={`${item.title}: ${option.label}`}
+                      />
+                      <span className="slider" aria-hidden />
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
             {item.name === 'web_search' && item.state !== 'needs_setup' && (
               <WebSearchProviders onChange={() => void refresh()} />
             )}

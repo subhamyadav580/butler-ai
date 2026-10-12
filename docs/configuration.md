@@ -31,6 +31,12 @@ Real environment variables take priority over `.env`.
 |---|---|---|
 | `BUTLER_TIMEZONE` | (this machine's zone) | IANA name, for example `Asia/Kolkata`. Used for calendar times and "today" or "tomorrow". Set it if Butler runs in a different zone from you |
 
+### Gmail
+
+| Variable | Default | Description |
+|---|---|---|
+| `GMAIL_ALLOW_SEND` | `false` | Default for **Allow replying & sending**. The switch on the Gmail card overrides it |
+
 ### Web search
 
 | Variable | Default | Description |

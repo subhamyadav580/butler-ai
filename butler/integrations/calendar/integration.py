@@ -6,7 +6,7 @@ from butler.config import GOOGLE_CLIENT_SECRET_FILE
 from butler.integrations.base import Integration
 from butler.integrations.google_oauth import google_status
 
-from .client import Calendar
+from .auth import get_calendar_service
 from .config import SCOPES, TOKEN_FILE
 from .tools import CALENDAR_TOOLS
 
@@ -63,8 +63,12 @@ class CalendarIntegration(Integration):
         return google_status(TOKEN_FILE, SCOPES, str(GOOGLE_CLIENT_SECRET_FILE), "Google Calendar")
 
     async def connect(self):
-        # Opens a browser on this machine, then one read to prove the API works
-        await asyncio.to_thread(lambda: Calendar(interactive=True).profile())
+        # Always opens a fresh Google login in a browser on this machine,
+        # then one read to prove the API works
+        def login_and_check():
+            service = get_calendar_service(interactive=True, force_login=True)
+            service.events().list(calendarId="primary", maxResults=1).execute()
+        await asyncio.to_thread(login_and_check)
 
     def login(self):
         from .login import main

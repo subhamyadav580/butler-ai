@@ -27,7 +27,7 @@ secrets/gmail_token.json  ── access token + refresh token
 - **Two modes:**
   - `interactive=True` (`gmail-login`, the web Connect button) may open a browser.
   - `interactive=False` (the agent's tools) raises `GmailLoginRequired` instead. A chat in the web UI or Telegram never hangs waiting for a login nobody is watching.
-- **Read-only scope:** Butler can't send or delete mail, even if the code had a bug.
+- **Scopes:** `gmail.readonly` for reading. `gmail.compose` (drafts and sending) is only requested after you switch on **Allow replying & sending**. The login helper checks which permissions the saved token **actually granted**, so a send without permission fails with "Reconnect" rather than a Google error. Butler can never delete mail.
 - **Testing-mode expiry:** while the Google app is in *Testing* mode, Google expires refresh tokens after about 7 days. Re-login, or publish the app.
 
 ### Google Calendar
@@ -102,7 +102,7 @@ Restricted access is enforced in three places:
 
 ## Action safety
 
-- **Gmail:** read-only by scope.
+- **Gmail:** sending is off by default. When on, every reply or new email needs **Approve** (owner-only on Telegram); drafts are never sent.
 - **Calendar:** creating, changing and deleting events always need **Approve**. Guests are only emailed when an event has attendees, and the card says so.
 - **Swiggy:** every tool in `NEEDS_APPROVAL` always needs **Approve**: placing or confirming orders (Food, Instamart), booking a table (Dineout), confirming payments, adding or deleting addresses, and clearing carts. Rejecting, ignoring, or moving on never runs them. See [Human in the loop](human-in-the-loop.md).
 - **Errors:** tool failures become messages to the LLM, never crashes or partial actions.

@@ -6,6 +6,7 @@ from butler.integrations.websearch import provider_overview, save_preferences
 from butler.web.schemas.integrations import (
     IntegrationsResponse,
     MetaResponse,
+    SetOptionRequest,
     UpdateWebSearchRequest,
     WebSearchProvidersResponse,
 )
@@ -53,3 +54,18 @@ async def update_web_search_providers(request: UpdateWebSearchRequest) -> WebSea
 
 async def get_meta() -> MetaResponse:
     return MetaResponse(tool_labels=all_tool_labels(), examples=example_prompts())
+
+
+async def set_integration_option(
+    name: str,
+    key: str,
+    request: SetOptionRequest,
+    integrations: IntegrationService = Depends(get_integration_service),
+):
+    try:
+        integrations.set_option(name, key, request.value)
+    except UnknownIntegration:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown integration: {name}") from None
+    except KeyError:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown option: {key}") from None
+    return {"ok": True}

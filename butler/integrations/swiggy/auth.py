@@ -76,6 +76,20 @@ class FileTokenStorage(TokenStorage):
             return os.path.getmtime(self.path) + expires_in
         return None
 
+    def take_tokens(self):
+        """Remove the saved login (keeping the registered client) so the next
+        connection must log in again. Returns what was removed, for put_back()."""
+        data = self._load()
+        removed = {k: data.pop(k) for k in ("tokens", "expires_at") if k in data}
+        self._save(data)
+        return removed
+
+    def put_back(self, removed):
+        data = self._load()
+        if "tokens" not in data:               # only if the new login didn't save one
+            data.update(removed)
+            self._save(data)
+
     async def get_client_info(self):
         client = self._load().get("client")
         return OAuthClientInformationFull.model_validate(client) if client else None

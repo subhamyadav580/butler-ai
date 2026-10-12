@@ -30,7 +30,7 @@ Rebuild the frontend (`npm run build`) after you pull updates that change `front
 - **Email picker:** when you ask to open an email, Butler shows a list. Click one to read it, or **Cancel**.
 - **Approvals:** before Butler places an order, changes an address or clears your cart, it shows a card with the details and **Approve / Reject**.
 - **Todos:** your todo list, grouped by list. Add, tick off, filter and delete. See [Todos](../integrations/todos.md).
-- **Integrations:** shows whether Gmail, Calendar and Swiggy are connected, how long the Swiggy login has left, which Swiggy services are loaded, and a **Connect** or **Reconnect** button. The **Web search** card has an on/off switch per provider and **Use first**.
+- **Integrations:** shows whether Gmail, Calendar and Swiggy are connected, how long the Swiggy login has left, which Swiggy services are loaded, and a **Connect** or **Reconnect** button. Cards can have switches, such as Gmail's **Allow replying & sending**; the **Web search** card has an on/off switch per provider and **Use first**.
 
 ## Where chats are stored
 
@@ -46,7 +46,7 @@ To back up your chat history, copy `data/butler.db`. To wipe it, stop Butler and
 
 ## Connecting accounts from the browser
 
-Clicking **Connect** runs the same login as the CLI commands. The login window opens in a browser **on the machine running Butler**. That's normal for a self-hosted app: the person running the server is the person whose accounts get connected.
+Clicking **Connect** or **Reconnect** always opens a fresh login, the same one the CLI commands run. If you cancel it, your previous login keeps working. The login window opens in a browser **on the machine running Butler**. That's normal for a self-hosted app: the person running the server is the person whose accounts get connected.
 
 If Butler runs on a remote server with no browser, connect on your laptop instead (`gmail-login`, `calendar-login`, `swiggy-login`) and copy the `secrets/` folder to the server.
 
@@ -94,6 +94,7 @@ The UI is a thin client over a small JSON API. FastAPI serves interactive docs a
 | `GET` | `/api/integrations` | Connection status |
 | `POST` | `/api/integrations/{name}/connect` | Start a login (`gmail`, `calendar`, `swiggy`) |
 | `POST` | `/api/integrations/reload` | Reload the agent's tools |
+| `PUT` | `/api/integrations/{name}/options/{key}` | Flip an integration's switch, e.g. Gmail's `send_enabled`: `{"value": true}` |
 | `GET` / `PUT` | `/api/integrations/web-search` | Web search providers: list them, switch them on or off, choose which is used first |
 | `GET` | `/api/auth/status`, `POST /api/auth/login` | Password login |
 

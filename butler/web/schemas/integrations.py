@@ -3,6 +3,13 @@ from typing import Literal, Optional
 from pydantic import BaseModel
 
 
+class IntegrationOption(BaseModel):
+    key: str
+    label: str
+    description: str = ""
+    value: bool
+
+
 class IntegrationStatus(BaseModel):
     name: str
     title: str
@@ -10,6 +17,7 @@ class IntegrationStatus(BaseModel):
     state: Literal["connected", "disconnected", "needs_setup"]
     detail: str
     connecting: bool
+    options: list[IntegrationOption] = []
     can_connect: bool = True       # False: set up in .env (API key), no login button
     error: Optional[str] = None
     expires_at: Optional[float] = None
@@ -42,3 +50,7 @@ class WebSearchProvidersResponse(BaseModel):
 class UpdateWebSearchRequest(BaseModel):
     enabled: dict[str, bool] = {}       # {"serper": false, …}: only the ones that change
     primary: Optional[str] = None       # provider to try first
+
+
+class SetOptionRequest(BaseModel):
+    value: bool

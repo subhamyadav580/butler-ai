@@ -80,6 +80,13 @@ export interface WebSearchProvider {
   primary: boolean
 }
 
+export interface IntegrationOption {
+  key: string
+  label: string
+  description: string
+  value: boolean
+}
+
 export interface IntegrationStatus {
   name: string
   title: string
@@ -88,6 +95,7 @@ export interface IntegrationStatus {
   detail: string
   connecting: boolean
   can_connect: boolean
+  options: IntegrationOption[]
   error: string | null
   expires_at: number | null
   needs_reload: boolean

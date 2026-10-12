@@ -936,3 +936,7 @@ pre {
 .switch input:disabled + .slider {
   opacity: 0.5;
 }
+
+.provider-list.options {
+  margin-top: 8px;
+}

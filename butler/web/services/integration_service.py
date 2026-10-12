@@ -39,11 +39,18 @@ class IntegrationService:
                 "title": integration.title,
                 "description": integration.description,
                 "can_connect": integration.can_connect,
+                "options": integration.options(),
                 "connecting": integration.name in self._connecting,
                 "error": self._errors.get(integration.name),
                 **status,
             })
         return statuses
+
+    def set_option(self, name, key, value):
+        integration = get_integration(name)
+        if integration is None:
+            raise UnknownIntegration(name)
+        integration.set_option(key, value)     # KeyError for unknown options
 
     def connect(self, name):
         """Start the integration's login in the background; returns immediately."""

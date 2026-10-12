@@ -15,8 +15,9 @@ from .client import Calendar
 
 def main():
     try:
-        calendar = Calendar(interactive=True)
-        profile = calendar.profile()
+        from .auth import get_calendar_service
+        get_calendar_service(interactive=True, force_login=True)   # fresh login
+        profile = Calendar().profile()
     except CalendarLoginRequired as error:
         raise SystemExit(str(error)) from error
     except HttpError as error:

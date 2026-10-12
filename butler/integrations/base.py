@@ -8,7 +8,8 @@ everything else (agent, prompt, CLI, web UI, Telegram) picks it up:
     agent          tools from load_tools(), prompt section from rules()
     CLI            login() as `python -m butler <login_command>`, plus cli_commands
     web UI         a card from status(), a Connect button running connect(),
-                   status labels from tool_labels, example prompts from examples
+                   switches from options(), status labels from tool_labels,
+                   example prompts from examples
     Telegram       example prompts; `restricted` integrations only for the owner
 
 See docs/internals/adding-tools.md for a walkthrough.
@@ -66,6 +67,15 @@ class Integration:
         optional "needs_reload": bool, plus any extra fields}. Must be quick:
         it runs every time the Integrations page loads."""
         return {"state": "connected", "detail": ""}
+
+    def options(self) -> list[dict]:
+        """On/off settings shown as switches on the integration's card:
+        [{"key", "label", "description", "value": bool}]. Store values with
+        butler.db.get_settings() so every process sees changes at once."""
+        return []
+
+    def set_option(self, key: str, value: bool):
+        raise KeyError(key)
 
     async def connect(self):
         """Run the interactive login (may open a browser on this machine).

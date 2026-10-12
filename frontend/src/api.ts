@@ -129,6 +129,12 @@ export const listIntegrations = () =>
 export const connectIntegration = (name: string) =>
   request<{ started: boolean }>(`/api/integrations/${name}/connect`, { method: 'POST' })
 
+export const setIntegrationOption = (name: string, key: string, value: boolean) =>
+  request<{ ok: boolean }>(`/api/integrations/${name}/options/${key}`, {
+    method: 'PUT',
+    body: JSON.stringify({ value }),
+  })
+
 export const reloadAgent = () =>
   request<{ ok: boolean }>('/api/integrations/reload', { method: 'POST' })
 

@@ -9,7 +9,7 @@ class CalendarLoginRequired(GoogleLoginRequired):
     """Calendar isn't connected and we may not open a browser to log in."""
 
 
-def get_calendar_service(interactive=False):
+def get_calendar_service(interactive=False, force_login=False):
     """Build an authenticated Google Calendar API client."""
     creds = get_credentials(
         scopes=SCOPES,
@@ -19,5 +19,6 @@ def get_calendar_service(interactive=False):
         service_name="Google Calendar",
         login_command=LOGIN_COMMAND,
         error_cls=CalendarLoginRequired,
+        force_login=force_login,
     )
     return build("calendar", "v3", credentials=creds)
