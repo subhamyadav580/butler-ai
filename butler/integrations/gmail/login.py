@@ -13,7 +13,7 @@ def main():
         gmail = Gmail(interactive=True)
         profile = gmail.service.users().getProfile(userId="me").execute()
     except GmailLoginRequired as error:
-        raise SystemExit(str(error))
+        raise SystemExit(str(error)) from error
     print(f"Gmail connected: {profile['emailAddress']}")
 
 

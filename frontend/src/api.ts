@@ -6,7 +6,9 @@ import type {
   StreamEvent,
   Thread,
   Todo,
+  Meta,
   TodoList,
+  WebSearchProvider,
 } from './types'
 
 const TOKEN_KEY = 'butler.token'
@@ -122,13 +124,13 @@ export const resume = (
 // --- Integrations ----------------------------------------------------------
 
 export const listIntegrations = () =>
-  request<{ integrations: IntegrationStatus[]; agent_has_swiggy: boolean }>('/api/integrations')
+  request<{ integrations: IntegrationStatus[] }>('/api/integrations')
 
 export const connectIntegration = (name: string) =>
   request<{ started: boolean }>(`/api/integrations/${name}/connect`, { method: 'POST' })
 
 export const reloadAgent = () =>
-  request<{ ok: boolean; agent_has_swiggy: boolean }>('/api/integrations/reload', { method: 'POST' })
+  request<{ ok: boolean }>('/api/integrations/reload', { method: 'POST' })
 
 // --- Todos -------------------------------------------------------------------
 
@@ -157,3 +159,27 @@ export const updateTodo = (id: number, changes: TodoInput) =>
 
 export const deleteTodo = (id: number) =>
   request<{ ok: boolean }>(`/api/todos/${id}`, { method: 'DELETE' })
+
+// --- Web search providers -----------------------------------------------------
+
+export const getWebSearchProviders = () =>
+  request<{ providers: WebSearchProvider[] }>('/api/integrations/web-search')
+
+export const updateWebSearchProviders = (changes: { enabled?: Record<string, boolean>; primary?: string }) =>
+  request<{ providers: WebSearchProvider[] }>('/api/integrations/web-search', {
+    method: 'PUT',
+    body: JSON.stringify(changes),
+  })
+
+// --- Meta: tool status labels and example prompts from every integration -------
+
+let metaPromise: Promise<Meta> | null = null
+
+/** Fetched once per page load and shared. */
+export function getMeta(): Promise<Meta> {
+  metaPromise ??= request<Meta>('/api/integrations/meta').catch((err) => {
+    metaPromise = null // retry next time
+    throw err
+  })
+  return metaPromise
+}

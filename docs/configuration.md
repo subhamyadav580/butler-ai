@@ -31,6 +31,17 @@ Real environment variables take priority over `.env`.
 |---|---|---|
 | `BUTLER_TIMEZONE` | (this machine's zone) | IANA name, for example `Asia/Kolkata`. Used for calendar times and "today" or "tomorrow". Set it if Butler runs in a different zone from you |
 
+### Web search
+
+| Variable | Default | Description |
+|---|---|---|
+| `SERPER_API_KEY` | (empty) | Key from [serper.dev](https://serper.dev). Web search is off when no provider key is set |
+| `TAVILY_API_KEY` | (empty) | Key from [tavily.com](https://tavily.com) |
+| `TAVILY_SEARCH_DEPTH` | `basic` | `basic` (1 credit) or `advanced` (2 credits, more relevant) |
+| `FIRECRAWL_API_KEY` | (empty) | Key from [firecrawl.dev](https://firecrawl.dev) |
+| `WEB_SEARCH_PROVIDER` | (first provider with a key) | Default provider to try first: `serper`, `tavily` or `firecrawl`. Others with a key are fallbacks. Choosing **Use first** on the Integrations page overrides it, and providers can be switched off there too |
+| `WEB_SEARCH_COUNTRY` | (provider default) | 2-letter country code for localised results: `in`, `us`, `gb`… |
+
 ### Swiggy
 
 | Variable | Default | Description |

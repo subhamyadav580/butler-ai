@@ -1,67 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as api from '../api'
-import type { ChatMessage, InterruptPayload, StreamEvent } from '../types'
+import type { ChatMessage, InterruptPayload, Meta, StreamEvent } from '../types'
 import { ApprovalCard } from './ApprovalCard'
 import { Composer } from './Composer'
 import { EmailPicker } from './EmailPicker'
 import { Markdown } from './Markdown'
 
-const TOOL_LABELS: Record<string, string> = {
-  get_emails: 'Searching your mail',
-  pick_email: 'Fetching emails',
-  read_email: 'Reading the email',
-  count_unread: 'Counting unread mail',
-  inbox_overview: 'Checking your inbox',
-  // Google Calendar
-  list_calendar_events: 'Checking your calendar',
-  get_calendar_event: 'Loading the event',
-  find_free_time: 'Finding free time',
-  create_calendar_event: 'Adding the event',
-  update_calendar_event: 'Updating the event',
-  delete_calendar_event: 'Deleting the event',
-  // Todos
-  add_todo: 'Adding your todo',
-  list_todos: 'Checking your todos',
-  complete_todo: 'Updating your todo',
-  update_todo: 'Updating your todo',
-  delete_todo: 'Deleting your todo',
-  todo_lists: 'Checking your lists',
-  // Swiggy Food
-  food_get_addresses: 'Loading your Swiggy addresses',
-  food_search_restaurants: 'Searching restaurants',
-  food_search_menu: 'Searching dishes',
-  food_get_restaurant_menu: 'Loading the menu',
-  food_update_food_cart: 'Updating your cart',
-  food_get_food_cart: 'Loading your cart',
-  food_place_food_order: 'Placing the order',
-  food_track_food_order: 'Tracking your order',
-  // Swiggy Instamart
-  instamart_get_addresses: 'Loading your Swiggy addresses',
-  instamart_search_products: 'Searching Instamart',
-  instamart_your_go_to_items: 'Loading your usual items',
-  instamart_get_cart: 'Loading your Instamart cart',
-  instamart_update_cart: 'Updating your Instamart cart',
-  instamart_checkout: 'Placing the Instamart order',
-  instamart_track_order: 'Tracking your order',
-  // Swiggy Dineout
-  dineout_get_saved_locations: 'Loading your locations',
-  dineout_search_restaurants_dineout: 'Finding restaurants',
-  dineout_get_restaurant_details: 'Loading restaurant details',
-  dineout_get_available_slots: 'Checking available tables',
-  dineout_book_table: 'Booking your table',
-  dineout_get_booking_status: 'Checking your booking',
-}
-
-const EXAMPLES = [
-  'How many unread mails do I have in Promotions?',
-  'Open a mail from LinkedIn',
-  "What's on my calendar tomorrow?",
-  'Remind me to pay rent on Friday',
-  'Find veg biryani near my office on Swiggy',
-  'Order milk and bread on Instamart',
-  'Book a table for 2 tonight in Connaught Place',
-  "What's 18% of 2,450?",
-]
+const EMPTY_META: Meta = { tool_labels: {}, examples: [] }
 
 interface Props {
   threadId: string
@@ -78,6 +23,12 @@ export function Chat({ threadId, onSent, onTurnFinished, onUnauthorized }: Props
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const [meta, setMeta] = useState<Meta>(EMPTY_META)
+
+  // Status labels and example prompts come from the integrations (backend)
+  useEffect(() => {
+    api.getMeta().then(setMeta).catch(() => undefined)
+  }, [])
 
   const handleError = useCallback(
     (err: unknown) => {
@@ -134,7 +85,7 @@ export function Chat({ threadId, onSent, onTurnFinished, onUnauthorized }: Props
             setStatus(null)
             break
           case 'tool':
-            setStatus(TOOL_LABELS[event.name] ?? `Using ${event.name}`)
+            setStatus(meta.tool_labels[event.name] ?? `Using ${event.name.replaceAll('_', ' ')}`)
             break
           case 'interrupt':
             flush()
@@ -180,9 +131,9 @@ export function Chat({ threadId, onSent, onTurnFinished, onUnauthorized }: Props
         {empty && (
           <div className="empty">
             <h1>How can I help?</h1>
-            <p>I can read your Gmail, order food on Swiggy, and answer general questions.</p>
+            <p>Ask me anything, or about your own mail, calendar, todos and more. Try one of these:</p>
             <div className="examples">
-              {EXAMPLES.map((example) => (
+              {meta.examples.slice(0, 6).map((example) => (
                 <button key={example} className="example" onClick={() => send(example)} disabled={busy}>
                   {example}
                 </button>

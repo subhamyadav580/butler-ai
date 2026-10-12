@@ -7,10 +7,10 @@ interface Props {
 }
 
 export function ApprovalCard({ payload, disabled, onAnswer }: Props) {
-  // Same rule as butler/agent/human.py show_raw_args(): calendar and todo
-  // approvals have a readable summary; Swiggy's raw args add payment details
-  const isSwiggy = /^(food|instamart|dineout)_/.test(payload.tool)
-  const showArgs = Object.keys(payload.args).length > 0 && (!payload.details || isSwiggy)
+  // Same rule as butler/agent/human.py show_raw_args(): the tool decides
+  // (show_args), otherwise only when there's no readable summary
+  const hasArgs = Object.keys(payload.args).length > 0
+  const showArgs = hasArgs && (payload.show_args || !payload.details)
   const args = showArgs ? JSON.stringify(payload.args, null, 2) : null
 
   return (

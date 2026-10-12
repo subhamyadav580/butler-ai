@@ -8,6 +8,7 @@ Step-by-step recipes, from the smallest change to the largest. Read [Tools](tool
 | Connect a new service through its Python SDK or REST API | [2. Add a new integration](#2-add-a-new-integration) |
 | Add another Swiggy service (Scenes, …) | [3. Add another Swiggy MCP server](#3-add-another-swiggy-mcp-server) |
 | Connect any other MCP server | [4. Add a third-party MCP server](#4-add-a-third-party-mcp-server) |
+| Add a web search provider | [Web search: adding a provider](../integrations/web-search.md#adding-a-provider) |
 | Make a tool ask before acting | [5. Require approval for a tool](#5-require-approval-for-a-tool) |
 | Ask the user a new kind of question | [6. Add a new kind of question](#6-add-a-new-kind-of-question) |
 
@@ -42,119 +43,133 @@ GMAIL_TOOLS = [get_emails, pick_email, read_email, count_unread, inbox_overview,
 
 That's all: `GMAIL_TOOLS` is already registered with the agent. Restart Butler and ask "what labels do I have?".
 
-Optionally, if the tool needs workflow guidance the description can't give, add a line to `GMAIL_RULES` in [agent/prompts.py](../../butler/agent/prompts.py).
+Optionally, in [gmail/integration.py](../../butler/integrations/gmail/integration.py):
+- add a status label to `tool_labels` (`"list_labels": "Checking your labels"`), shown in the web UI while it runs
+- add a line to `RULES` if the tool needs workflow guidance its description can't give
 
 ## 2. Add a new integration
 
-Example: **Google Calendar**. This is now implemented, so use [`butler/integrations/calendar/`](../../butler/integrations/calendar/) as the reference while reading. The steps below are how it was built and apply to any new Python integration, such as Google Tasks or Notion.
+An integration is **one folder** plus **one line in the registry**. Everything else (the agent, the prompt, the CLI, the web UI's cards and labels, Telegram) reads the registry, so you don't edit any shared code.
 
-### 2.1 Files
+Use an existing integration as your template:
+
+| If your integration… | Copy |
+|---|---|
+| uses Google's APIs (OAuth) | [`calendar/`](../../butler/integrations/calendar/) |
+| needs no login (local data, or an API key in `.env`) | [`todos/`](../../butler/integrations/todos/) or [`websearch/`](../../butler/integrations/websearch/) |
+| talks to an MCP server | [`swiggy/`](../../butler/integrations/swiggy/) |
+
+### 2.1 The folder
 
 ```
-butler/integrations/calendar/
-├── __init__.py      exports CALENDAR_TOOLS
-├── config.py        scopes, token path, login command
-├── auth.py          credentials; never opens a browser unless interactive=True
-├── client.py        a small class wrapping the API
-├── tools.py         @tool functions + CALENDAR_TOOLS
-└── login.py         `python -m butler calendar-login`
+butler/integrations/notes/
+├── __init__.py
+├── config.py         its settings from .env (API keys, token file in SECRETS_DIR)
+├── tools.py          the LangChain tools (@tool) + NOTES_TOOLS
+├── integration.py    INTEGRATION = NotesIntegration(): ties it all together
+├── auth.py, client.py, login.py   only if it needs them
 ```
 
-### 2.2 Config and token path
-
-Add the token path in [butler/config.py](../../butler/config.py), next to the others:
+Keep settings in the integration's own `config.py`, not in `butler/config.py`:
 
 ```python
-CALENDAR_TOKEN_FILE = SECRETS_DIR / "calendar_token.json"
+# butler/integrations/notes/config.py
+import os
+from butler.config import SECRETS_DIR      # importing butler.config also loads .env
+
+NOTES_API_KEY = os.getenv("NOTES_API_KEY", "").strip()
+TOKEN_FILE = str(SECRETS_DIR / "notes_token.json")
 ```
 
-`calendar/config.py`:
+### 2.2 The tools
+
+Plain LangChain tools; see [Tools](tools.md) for good tool design.
 
 ```python
-from butler.config import CALENDAR_TOKEN_FILE, GOOGLE_CLIENT_SECRET_FILE
+# butler/integrations/notes/tools.py
+from langchain_core.tools import tool
 
-SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
-CREDENTIALS_FILE = str(GOOGLE_CLIENT_SECRET_FILE)   # same Google OAuth client as Gmail
-TOKEN_FILE = str(CALENDAR_TOKEN_FILE)
-LOGIN_COMMAND = "python -m butler calendar-login"
-```
-
-### 2.3 Auth: the one rule that matters
-
-For Google services, call the shared [google_oauth.get_credentials()](../../butler/integrations/google_oauth.py) (Gmail and Calendar both do). For other services, keep the same key behaviour:
-
-```python
-def get_calendar_service(interactive=False):
-    ...
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        elif not interactive:
-            # The agent must never open a browser: the chat would hang
-            raise CalendarLoginRequired(f"Calendar is not connected. Run `{LOGIN_COMMAND}`.")
-        else:
-            creds = InstalledAppFlow.from_client_secrets_file(...).run_local_server(port=0)
-```
-
-Tools use `interactive=False`; only `login.py` and the web UI's Connect button use `interactive=True`.
-
-### 2.4 Tools
-
-```python
 @tool
-def upcoming_events(days: int = 7, limit: int = 10) -> list[dict]:
-    """List the user's calendar events in the next `days` days.
+def search_notes(query: str, limit: int = 10) -> list[dict]:
+    """Search the user's notes by text. Use for 'find my note about…'."""
+    return client().search(query, max(1, min(limit, 50)))
 
-    Args:
-        days: How far ahead to look (1-60).
-        limit: Maximum events to return (1-50).
-    """
-    events = _client().upcoming(max(1, min(days, 60)), max(1, min(limit, 50)))
-    return [{"id": e["id"], "title": e.get("summary", ""), "start": e["start"],
-             "end": e["end"], "location": e.get("location")} for e in events]
-
-
-CALENDAR_TOOLS = [upcoming_events]
+NOTES_TOOLS = [search_notes]
 ```
 
-Return compact dicts: whatever you return is re-sent to the LLM on every later turn.
+### 2.3 `integration.py`: everything Butler needs to know
 
-### 2.5 Register with the agent
-
-[agent/graph.py](../../butler/agent/graph.py):
+Subclass [`Integration`](../../butler/integrations/base.py) and override only what you need:
 
 ```python
-from butler.integrations.calendar import CALENDAR_TOOLS
+# butler/integrations/notes/integration.py
+from butler.integrations.base import Integration
+from .config import NOTES_API_KEY
+from .tools import NOTES_TOOLS
 
-all_tools = GMAIL_TOOLS + CALENDAR_TOOLS + swiggy_tools
-...
-llm_without_swiggy = llm.bind_tools(GMAIL_TOOLS + CALENDAR_TOOLS)
+RULES = (
+    "Notes (the user's notes app):\n"
+    "- Use search_notes for anything the user wrote down before.\n"
+)
+
+
+class NotesIntegration(Integration):
+    name = "notes"                       # id: CLI, API, settings
+    title = "Notes"                      # shown in the UI
+    description = "Search and read your notes."
+    tool_labels = {"search_notes": "Searching your notes"}      # web UI status line
+    examples = ["Find my note about the trip budget"]           # web UI + Telegram /start
+
+    async def load_tools(self):
+        if not NOTES_API_KEY:            # not set up: leave it out, say why at startup
+            return [], "notes is off. Add NOTES_API_KEY to .env"
+        return NOTES_TOOLS, None
+
+    def rules(self, tool_names):         # its section of the system prompt
+        return RULES
+
+    def status(self, loaded_tool_names): # its card on the Integrations page
+        if not NOTES_API_KEY:
+            return {"state": "needs_setup", "detail": "Add NOTES_API_KEY to .env."}
+        return {"state": "connected", "detail": "Connected."}
+
+
+INTEGRATION = NotesIntegration()
 ```
 
-[agent/prompts.py](../../butler/agent/prompts.py): add a `CALENDAR_RULES` block (time zone, date format, when to use the tool) and include it in `system_prompt()`.
+What each part does:
 
-### 2.6 Login command
+| Part | Used by | Default |
+|---|---|---|
+| `load_tools()` or `tools()` | the agent; return `[]` to leave the integration out | `tools()` returns `[]` |
+| `rules(tool_names)` | the system prompt (only when its tools loaded) | no section |
+| `status(loaded_tool_names)` | the Integrations page card | "connected" |
+| `tool_labels`, `examples` | the web UI status line, the empty chat and Telegram `/start` | none |
+| `restricted = True` | owner-only on Telegram (`TELEGRAM_OWNER_ID`), for costly or risky integrations | `False` |
+| `login_command`, `login()` | the CLI: `python -m butler notes-login` | none |
+| `can_connect`, `connect()` | the **Connect** button on the Integrations page | no button |
+| `reload_on_connect` | rebuild the agent after connecting (tools that load at startup) | `False` |
+| `cli_commands` | extra CLI commands, like Gmail's `gmail` reader | none |
 
-[butler/__main__.py](../../butler/__main__.py): add `"calendar-login"` to `COMMANDS` and a branch:
+**Logins:** never open a browser from a tool. Follow the Gmail pattern: `interactive=False` raises "not connected, run `notes-login`", and only `login()` and `connect()` may open a browser. For Google services, use the shared [google_oauth.py](../../butler/integrations/google_oauth.py) (`get_credentials` and `google_status`).
+
+### 2.4 Register it
+
+One line in [butler/integrations/registry.py](../../butler/integrations/registry.py):
 
 ```python
-elif command == "calendar-login":
-    from butler.integrations.calendar import login as calendar_login
-    calendar_login.main()
+from .notes.integration import INTEGRATION as notes
+
+INTEGRATIONS = [gmail, calendar, todos, web_search, swiggy, notes]
 ```
 
-### 2.7 Show it in the web UI
+The order is the order of prompt sections and Integrations-page cards. Restart Butler, and the integration is in the agent, the prompt, the CLI, the web UI and Telegram.
 
-[web/services/integration_service.py](../../butler/web/services/integration_service.py):
+### 2.5 Document it
 
-1. Add a `_calendar_status()` that returns `{name, title, description, state, detail, ...}`, where `state` is `connected`, `disconnected` or `needs_setup`, and append it in `list_status()`.
-2. Add `"calendar": self._connect_calendar` to the `flows` dict in `connect()`, running your login with `interactive=True` inside `asyncio.to_thread(...)`.
-
-The Integrations page renders it automatically; no frontend change is needed.
-
-### 2.8 Document it
-
-Add `docs/integrations/calendar.md` (setup and what you can ask), link it from the README's integration table, and add any new `.env` settings to [configuration.md](../configuration.md) and `.env.example`.
+- `docs/integrations/notes.md`: setup and what you can ask
+- a row in the README's integration table
+- its settings in `.env.example` and [configuration.md](../configuration.md)
 
 ## 3. Add another Swiggy MCP server
 
@@ -177,13 +192,13 @@ Food, Instamart and Dineout are already integrated. Swiggy also runs **Scenes** 
 
 4. **Gate risky tools.** Add every tool that orders, pays, books, cancels, or changes addresses to `NEEDS_APPROVAL`, with the question for the card. If a cart or summary tool exists, add a preview in `_preview()`.
 
-5. **Teach the workflow.** Add a `SCENES_RULES` block in [agent/prompts.py](../../butler/agent/prompts.py), register it in `SERVICE_RULES` and in the order in `system_prompt()`. Read the tools' own descriptions first; they often contain required steps such as "call X before Y" or "this replaces the whole cart".
+5. **Teach the workflow.** In [swiggy/integration.py](../../butler/integrations/swiggy/integration.py), add a `SCENES_RULES` block and register it in `SERVICE_RULES` (and in the order inside `rules()`). Read the tools' own descriptions first; they often contain required steps such as "call X before Y" or "this replaces the whole cart".
 
-6. **Add the labels.** In the web UI, add status labels for the new tools in `TOOL_LABELS` ([Chat.tsx](../../frontend/src/components/Chat.tsx)).
+6. **Add the labels.** Add status labels for the new tools to `tool_labels` in the same file, and an example prompt to `examples`.
 
 7. **Test** with approvals **rejected**, and leave any test cart empty afterwards. See [Testing](#testing).
 
-8. **Watch the tool count.** Today there are 49 tools (5 Gmail and 44 Swiggy). Each service adds 10–20. Smaller models choose worse as the list grows; recommend `gpt-4.1-mini` or better, or let users trim with `SWIGGY_SERVICES`.
+8. **Watch the tool count.** With everything enabled there are already 60+ tools, about 44 of them Swiggy's. Each Swiggy service adds 10–20. Smaller models choose worse as the list grows; recommend `gpt-4.1-mini` or better, or let users trim with `SWIGGY_SERVICES`.
 
 ## 4. Add a third-party MCP server
 
@@ -214,8 +229,8 @@ Then:
    - `_to_text()`: flatten MCP content blocks
    - an approval set for risky tools
    - turn auth errors into a clear "run `<name>-login`" message
-2. **Load it in `build_graph()`** like Swiggy: `tools, error = await load_<name>_tools()`. Return `[]` when it isn't connected, so Butler still starts.
-3. **Add prompt rules, a login command if it uses OAuth, an Integrations entry and docs**, as in recipe 2.
+2. **Make it an integration** (recipe 2): return the wrapped tools from `load_tools()` (async is fine), or `[]` with a reason when it isn't configured, so Butler still starts. Set `restricted = True` if it can spend money or change accounts.
+3. **Register it and document it**, as in recipe 2.
 
 ## 5. Require approval for a tool
 

@@ -1,4 +1,8 @@
-"""Settings loaded from the environment / the project's .env file."""
+"""Core settings, loaded from the environment / the project's .env file.
+
+Integration-specific settings live in each integration's own config.py
+(butler/integrations/<name>/config.py); they read the same .env.
+"""
 
 import os
 from datetime import datetime
@@ -19,14 +23,13 @@ def _int_set(value):
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 # --- Secrets (never committed; see .gitignore) -----------------------------
+# Each integration keeps its own token file in SECRETS_DIR (see its config.py).
+# The Google OAuth client is shared by every Google integration.
 SECRETS_DIR = Path(os.getenv("BUTLER_SECRETS_DIR", ROOT_DIR / "secrets"))
 
 GOOGLE_CLIENT_SECRET_FILE = Path(
     os.getenv("GOOGLE_CLIENT_SECRET_FILE", SECRETS_DIR / "google_client_secret.json")
 )
-GMAIL_TOKEN_FILE = SECRETS_DIR / "gmail_token.json"
-CALENDAR_TOKEN_FILE = SECRETS_DIR / "calendar_token.json"
-SWIGGY_TOKEN_FILE = SECRETS_DIR / "swiggy_token.json"
 
 # --- Telegram --------------------------------------------------------------
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -34,8 +37,8 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 # Only these Telegram user IDs may use the bot. Empty = nobody (deny by default)
 TELEGRAM_ALLOWED_USER_IDS = _int_set(os.getenv("TELEGRAM_ALLOWED_USER_IDS"))
 
-# Swiggy acts on YOUR account. Set to restrict it to one Telegram user;
-# empty = every allowed user gets Swiggy
+# Restricted integrations (e.g. Swiggy) act on YOUR account. Set to restrict
+# them to one Telegram user; empty = every allowed user gets them
 TELEGRAM_OWNER_ID = int(os.getenv("TELEGRAM_OWNER_ID") or 0)
 
 # --- Time zone ---------------------------------------------------------------
@@ -51,17 +54,8 @@ def local_tz():
     return datetime.now().astimezone().tzinfo
 
 
-# --- Swiggy ------------------------------------------------------------------
-# Which Swiggy services to load. Fewer services = fewer tools for the LLM to
-# choose from, which helps smaller models pick the right one.
-SWIGGY_SERVICES = {
-    s.strip().lower()
-    for s in os.getenv("SWIGGY_SERVICES", "food,instamart,dineout").split(",")
-    if s.strip()
-}
-
 # --- Web UI ----------------------------------------------------------------
-# Defaults to localhost only: the UI can read your Gmail and order on Swiggy
+# Defaults to localhost only: the UI acts on your connected accounts
 WEB_HOST = os.getenv("BUTLER_WEB_HOST", "127.0.0.1")
 WEB_PORT = int(os.getenv("BUTLER_WEB_PORT", "8000"))
 

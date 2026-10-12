@@ -53,7 +53,7 @@ def get_credentials(
             # e.g. invalid_grant: apps in Google's "Testing" mode get
             # refresh tokens that expire after ~7 days
             if not interactive:
-                raise error_cls(f"{service_name} login has expired. {how_to_connect}")
+                raise error_cls(f"{service_name} login has expired. {how_to_connect}") from None
 
     if not interactive:
         raise error_cls(f"{service_name} is not connected. {how_to_connect}")
@@ -74,3 +74,21 @@ def _save(token_file, creds):
     with open(token_file, "w") as token:
         token.write(creds.to_json())
     os.chmod(token_file, 0o600)
+
+
+def google_status(token_file, scopes, client_file, service_name):
+    """Integrations-page status for a Google integration (quick: no network)."""
+    if not os.path.exists(client_file):
+        return {
+            "state": "needs_setup",
+            "detail": (
+                "Create a Google OAuth client (Desktop app) and save it as "
+                f"{os.path.basename(client_file)} in the secrets/ folder. "
+                "See docs/integrations/gmail.md."
+            ),
+        }
+    if os.path.exists(token_file):
+        creds = Credentials.from_authorized_user_file(token_file, scopes)
+        if creds.valid or creds.refresh_token:
+            return {"state": "connected", "detail": "Connected."}
+    return {"state": "disconnected", "detail": f"{service_name} is not connected yet."}

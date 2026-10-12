@@ -7,7 +7,7 @@ from langgraph.types import interrupt
 from butler.config import local_tz
 
 from .client import Calendar
-from .times import default_end, from_google, human, parse_when, to_google
+from butler.utils.times import default_end, from_google, human, parse_when, to_google
 
 MAX_DESCRIPTION_CHARS = 500
 

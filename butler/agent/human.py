@@ -5,6 +5,8 @@ being asked. Interfaces (CLI, Telegram, web) show the question and resume
 with Command(resume=<answer>).
 """
 
+import json
+
 from langgraph.types import Command
 
 # Resume values that mean "the user moved on without answering"
@@ -31,16 +33,24 @@ async def cancel_pending(graph, config):
 
 
 
-SWIGGY_PREFIXES = ("food_", "instamart_", "dineout_")
-
-
 def show_raw_args(payload):
-    """Whether an approval should show the tool's raw arguments.
+    """Whether an approval card should also show the tool's raw arguments.
 
-    Calendar and todo approvals carry a readable summary in `details`, so the
-    raw JSON is noise. Swiggy's arguments hold things the summary lacks
-    (payment method, address id), so they stay visible.
+    Tools decide: a payload with "show_args": True always shows them (Swiggy
+    sets it: payment method, address id). Otherwise only when there's no
+    readable `details` summary.
     """
-    if not payload.get("details"):
+    if payload.get("show_args"):
         return bool(payload.get("args"))
-    return str(payload.get("tool", "")).startswith(SWIGGY_PREFIXES)
+    return not payload.get("details") and bool(payload.get("args"))
+
+
+def is_restricted(payload):
+    """Approvals marked "restricted" act on the owner's account (orders,
+    payments): only users allowed restricted integrations may answer them."""
+    return bool(payload.get("restricted"))
+
+
+def format_args(args):
+    """Tool arguments as readable JSON, for approval prompts."""
+    return json.dumps(args, indent=2, ensure_ascii=False)

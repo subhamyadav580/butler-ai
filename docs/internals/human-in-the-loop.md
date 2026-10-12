@@ -42,6 +42,17 @@ A checkpointer is **required** for interrupts; without one, LangGraph can't save
 
 Each interface keys its renderer on `payload["type"]`, so one table drives all of them.
 
+## Flags on an approval
+
+A tool can mark its `confirm_action` payload:
+
+| Flag | Effect |
+|---|---|
+| `"restricted": True` | Acts on the owner's account (orders, payments). Only users allowed restricted integrations can answer it; on Telegram, that's `TELEGRAM_OWNER_ID` |
+| `"show_args": True` | Show the raw arguments as well as `details` (Swiggy: payment method, address ID). Without it, raw arguments only show when there's no `details` summary |
+
+Interfaces read these flags, so they never need to know which integration asked.
+
 ## When the user moves on without answering
 
 If a thread is paused and the user sends a **new message** instead:

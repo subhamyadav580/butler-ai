@@ -59,7 +59,7 @@ async def resume(
     try:
         answer = ANSWER_SCHEMAS[request.type].model_validate(request.answer)
     except ValidationError as error:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, error.errors())
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, error.errors()) from error
 
     events = chats.resume(request.thread_id, request.type, answer.model_dump())
 
@@ -67,7 +67,7 @@ async def resume(
     try:
         first = await anext(events)
     except InterruptMismatch as error:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(error))
+        raise HTTPException(status.HTTP_409_CONFLICT, str(error)) from error
     except StopAsyncIteration:
         first = None
 
@@ -99,7 +99,7 @@ async def rename_thread(
     try:
         return Thread(**chats.rename(thread_id, request.title))
     except ThreadNotFound:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Conversation not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Conversation not found") from None
 
 
 async def delete_thread(

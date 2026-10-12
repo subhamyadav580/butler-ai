@@ -8,10 +8,7 @@ from langgraph.graph import StateGraph, MessagesState, START
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from butler.config import OPENAI_MODEL
-from butler.integrations.calendar import CALENDAR_TOOLS
-from butler.integrations.gmail import GMAIL_TOOLS
-from butler.integrations.todos import TODO_TOOLS
-from butler.integrations.swiggy import load_swiggy_tools, services_of
+from butler.integrations.registry import INTEGRATIONS
 
 from .prompts import system_prompt
 
@@ -49,30 +46,34 @@ def with_tool_results(messages):
 
 
 async def build_graph():
-    """Load every tool (Swiggy needs async MCP calls) and compile the agent."""
-    swiggy_tools, swiggy_error = await load_swiggy_tools()
-    if swiggy_error:
-        suffix = "" if swiggy_tools else " Continuing without Swiggy."
-        print(f"WARNING: {swiggy_error}.{suffix}")
+    """Load every integration's tools and compile the agent."""
+    loaded = []                      # [(integration, tools)] that have tools
+    for integration in INTEGRATIONS:
+        tools, warning = await integration.load_tools()
+        if warning:
+            print(f"NOTE: {integration.title}: {warning}.")
+        if tools:
+            loaded.append((integration, tools))
 
-    # Every capability the agent has. Add new tool lists here.
-    base_tools = GMAIL_TOOLS + CALENDAR_TOOLS + TODO_TOOLS   # available to every user
-    all_tools = base_tools + swiggy_tools
-    swiggy_services = services_of(swiggy_tools)   # e.g. {"food", "instamart", "dineout"}
+    def toolset(pairs):
+        return [tool for _, tools in pairs for tool in tools]
 
-    # Users without Swiggy access never even see the Swiggy tools
-    llm_with_swiggy = llm.bind_tools(all_tools)
-    llm_without_swiggy = llm.bind_tools(base_tools)
+    # Restricted integrations (e.g. Swiggy: orders on the owner's account) are
+    # hidden from users who aren't allowed them; see allow_restricted below
+    everyone = [(i, t) for i, t in loaded if not i.restricted]
+    all_tools = toolset(loaded)
+    llm_full = llm.bind_tools(all_tools)
+    llm_open = llm.bind_tools(toolset(everyone))
+
+    def sections(pairs):
+        return [i.rules({tool.name for tool in tools}) for i, tools in pairs]
 
     async def agent(state: MessagesState, config: RunnableConfig):
-        swiggy_enabled = bool(swiggy_tools) and config["configurable"].get(
-            "swiggy_allowed", True
-        )
-        agent_llm = llm_with_swiggy if swiggy_enabled else llm_without_swiggy
-        services = swiggy_services if swiggy_enabled else ()
+        allowed = config["configurable"].get("allow_restricted", True)
+        pairs, agent_llm = (loaded, llm_full) if allowed else (everyone, llm_open)
 
         response = await agent_llm.ainvoke(
-            [{"role": "system", "content": system_prompt(services)}]
+            [{"role": "system", "content": system_prompt(sections(pairs))}]
             + with_tool_results(state["messages"])
         )
         return {"messages": [response]}
@@ -92,3 +93,8 @@ async def build_graph():
     # Checkpointer is required for interrupt() (human-in-the-loop) and keeps
     # conversation history per thread_id
     return graph.compile(checkpointer=InMemorySaver())
+
+
+def loaded_tool_names(graph):
+    """Names of every tool the compiled agent can run."""
+    return set(graph.get_graph().nodes["tools"].data.tools_by_name)

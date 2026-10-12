@@ -9,7 +9,7 @@ def main():
     if WEB_HOST not in ("127.0.0.1", "localhost") and not WEB_PASSWORD:
         print(
             f"WARNING: serving on {WEB_HOST} without BUTLER_WEB_PASSWORD — anyone "
-            "who can reach this address can read your Gmail and use your Swiggy."
+            "who can reach this address can use your connected accounts."
         )
     print(f"Butler web UI: http://{WEB_HOST}:{WEB_PORT}")
     uvicorn.run("butler.web.app:app", host=WEB_HOST, port=WEB_PORT)

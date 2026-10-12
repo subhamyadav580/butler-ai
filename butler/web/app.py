@@ -20,9 +20,9 @@ async def lifespan(app: FastAPI):
     agent_service = AgentService()
     await agent_service.start()
 
-    async def on_connected(name):
-        # New credentials → rebuild the agent so it picks up the new tools
-        if name == "swiggy":
+    async def on_connected(integration):
+        # New credentials → rebuild the agent if its tools load at startup
+        if integration.reload_on_connect:
             await agent_service.reload()
 
     # Chat list + transcripts persist in SQLite; agent memory stays in RAM

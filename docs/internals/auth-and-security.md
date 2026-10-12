@@ -65,7 +65,7 @@ secrets/            ← git-ignored, created by you and by the login commands
 ├── gmail_token.json
 └── swiggy_token.json
 .env                ← git-ignored: API keys and settings
-data/butler.db      ← git-ignored: your saved web chats
+data/butler.db      ← git-ignored: saved web chats, todos, settings (e.g. web search providers)
 ```
 
 Treat `secrets/` like a password vault: anyone with these files can read your Gmail and use your Swiggy account.
@@ -95,7 +95,10 @@ Code: [interfaces/telegram_bot.py](../../butler/interfaces/telegram_bot.py)
 | `TELEGRAM_ALLOWED_USER_IDS` | Nobody can use the bot (deny by default) | Only these users; others are refused and shown their ID |
 | `TELEGRAM_OWNER_ID` | Every allowed user can use Swiggy | Only this user gets Swiggy tools and can approve Swiggy actions. Calendar and todo approvals stay open to every allowed user |
 
-Swiggy access is enforced twice. Users without access never have the Swiggy tools bound to the LLM, and every Swiggy tool also checks `swiggy_allowed` before running. Approve buttons check it too, which matters in group chats.
+Restricted access is enforced in three places:
+- Integrations marked `restricted = True` (Swiggy) aren't bound to the LLM for users without access (`allow_restricted` in the run's config).
+- Every Swiggy tool also checks that flag before running.
+- Their approvals carry `"restricted": True`, so only the owner can tap Approve, which matters in group chats.
 
 ## Action safety
 

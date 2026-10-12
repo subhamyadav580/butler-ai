@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import * as api from '../api'
 import type { IntegrationStatus } from '../types'
+import { WebSearchProviders } from './WebSearchProviders'
 
 const STATE_LABELS: Record<IntegrationStatus['state'], string> = {
   connected: 'Connected',
@@ -10,7 +11,6 @@ const STATE_LABELS: Record<IntegrationStatus['state'], string> = {
 
 export function Integrations({ onUnauthorized }: { onUnauthorized: () => void }) {
   const [items, setItems] = useState<IntegrationStatus[]>([])
-  const [agentHasSwiggy, setAgentHasSwiggy] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reloading, setReloading] = useState(false)
 
@@ -18,7 +18,6 @@ export function Integrations({ onUnauthorized }: { onUnauthorized: () => void })
     try {
       const data = await api.listIntegrations()
       setItems(data.integrations)
-      setAgentHasSwiggy(data.agent_has_swiggy)
       setError(null)
     } catch (err) {
       if (err instanceof api.UnauthorizedError) onUnauthorized()
@@ -50,15 +49,14 @@ export function Integrations({ onUnauthorized }: { onUnauthorized: () => void })
   const reload = async () => {
     setReloading(true)
     try {
-      const result = await api.reloadAgent()
-      setAgentHasSwiggy(result.agent_has_swiggy)
+      await api.reloadAgent()
       await refresh()
     } finally {
       setReloading(false)
     }
   }
 
-  const swiggyConnected = items.some((i) => i.name === 'swiggy' && i.state === 'connected')
+  const needsReload = items.filter((i) => i.needs_reload).map((i) => i.title)
 
   return (
     <section className="page">
@@ -70,9 +68,9 @@ export function Integrations({ onUnauthorized }: { onUnauthorized: () => void })
 
       {error && <div className="error">{error}</div>}
 
-      {swiggyConnected && !agentHasSwiggy && (
+      {needsReload.length > 0 && (
         <div className="notice">
-          Swiggy is connected but the agent was started without it.
+          {needsReload.join(', ')}: connected, but the agent needs a reload to use it.
           <button className="btn small" onClick={reload} disabled={reloading}>
             {reloading ? 'Reloading…' : 'Reload agent'}
           </button>
@@ -89,7 +87,10 @@ export function Integrations({ onUnauthorized }: { onUnauthorized: () => void })
             <p>{item.description}</p>
             <p className="muted small">{item.detail}</p>
             {item.error && <p className="error small">{item.error}</p>}
-            {item.state !== 'needs_setup' && (
+            {item.name === 'web_search' && item.state !== 'needs_setup' && (
+              <WebSearchProviders onChange={() => void refresh()} />
+            )}
+            {item.can_connect && item.state !== 'needs_setup' && (
               <button
                 className={`btn ${item.state === 'connected' ? 'ghost' : 'primary'}`}
                 disabled={item.connecting}

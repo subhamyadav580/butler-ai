@@ -94,6 +94,17 @@ python -m butler calendar-login
 
 Allow access to calendar events in the browser. See **[the Calendar guide](integrations/calendar.md)**.
 
+## 3c. Turn on web search (optional)
+
+Get a key at [serper.dev](https://serper.dev), [tavily.com](https://tavily.com) or [firecrawl.dev](https://firecrawl.dev) (or several: the others become fallbacks) and add it to `.env`:
+
+```
+SERPER_API_KEY=your-key        # and/or TAVILY_API_KEY / FIRECRAWL_API_KEY
+WEB_SEARCH_COUNTRY=in
+```
+
+Restart Butler. Now "what's the score in India vs West Indies?" gets a current answer with sources. See **[the web search guide](integrations/web-search.md)**.
+
 ## 4. Connect Swiggy (optional)
 
 No setup is needed. Just log in:
@@ -141,6 +152,7 @@ Open a mail from Amazon                          ← shows a picker
 Any mail with attachments from last week?
 Remind me to pay rent on Friday                  ← todos work with no setup
 What's on my list?
+What's the latest news on ISRO?                  ← web search
 What's on my calendar tomorrow?
 Find me a free hour on Thursday
 Block 30 min for a call on Friday at 4 pm       ← asks you to Approve

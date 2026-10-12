@@ -1,4 +1,14 @@
-from butler.config import SWIGGY_SERVICES, SWIGGY_TOKEN_FILE
+import os
+
+from butler.config import SECRETS_DIR
+
+# Which Swiggy services to load. Fewer services = fewer tools for the LLM to
+# choose from, which helps smaller models pick the right one.
+SWIGGY_SERVICES = {
+    s.strip().lower()
+    for s in os.getenv("SWIGGY_SERVICES", "food,instamart,dineout").split(",")
+    if s.strip()
+}
 
 # Swiggy's MCP servers. Tool names get the service as a prefix
 # (food_get_addresses, instamart_get_addresses, …) because several tool
@@ -25,7 +35,7 @@ EXCLUDED_TOOLS = {
 }
 
 # Holds the OAuth access token and the dynamically registered client
-TOKEN_FILE = str(SWIGGY_TOKEN_FILE)
+TOKEN_FILE = str(SECRETS_DIR / "swiggy_token.json")
 
 # Swiggy allows http://localhost redirects for development without approval
 REDIRECT_PORT = 8765

@@ -4,8 +4,7 @@ import asyncio
 
 from langgraph.types import Command
 
-from butler.agent import build_graph, show_raw_args
-from butler.integrations.swiggy import format_args
+from butler.agent import build_graph, format_args, show_raw_args
 
 
 def ask_user_to_pick(payload):
@@ -61,7 +60,7 @@ async def chat(graph, text, config):
 
 async def main():
     graph = await build_graph()
-    config = {"configurable": {"thread_id": "cli", "swiggy_allowed": True}}
+    config = {"configurable": {"thread_id": "cli", "allow_restricted": True}}
 
     print("Chat with your assistant (type 'exit' to quit)")
     while True:

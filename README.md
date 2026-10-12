@@ -1,6 +1,6 @@
 # Butler
 
-**A self-hosted personal AI assistant for your Gmail, Google Calendar, todos and Swiggy (Food, Instamart, Dineout).** You can chat with it in a **web UI**, on **Telegram**, or in your **terminal**.
+**A self-hosted personal AI assistant for your Gmail, Google Calendar, todos, web search and Swiggy (Food, Instamart, Dineout).** You can chat with it in a **web UI**, on **Telegram**, or in your **terminal**.
 
 ```
 You:    how many unread mails in Promotions, and what's 15% of 240?
@@ -30,11 +30,12 @@ Butler is open source and runs on your own machine. You connect **your own** acc
 |---|---|
 | 📬 **Gmail** (read-only) | List, search and filter mail by tab (Primary, Promotions, Updates, …), sender, subject, date or unread; count unread mail; open any email |
 | 📅 **Google Calendar** | See your schedule, find free time, add, move or cancel events (with Meet links and guests) |
+| 🔎 **Web search** | News, live scores, prices, facts, with sources cited. Serper, Tavily and Firecrawl, with automatic fallback |
 | ☑️ **Todos** | Butler's own todo list: due dates, lists, priorities; a Todos page in the web UI. No setup |
 | 🍔 **Swiggy Food** (India) | Restaurant and dish search, menus, cart, coupons, ordering, order tracking |
 | 🛒 **Swiggy Instamart** (India) | Groceries and essentials: product search, your usual items, cart, checkout, tracking |
 | 🍽️ **Swiggy Dineout** (India) | Find restaurants, check available tables, book free reservations |
-| 💬 **General questions** | Anything else, answered directly by the model |
+| 💬 **General questions** | Anything else, answered directly by the model, or with a web search when it needs current information |
 | ✋ **Asks before acting** | Shows a picker when you want to open an email, and asks you to **Approve/Reject** before placing an order, booking a table, or changing your account |
 
 ## Three ways to use it
@@ -72,6 +73,7 @@ Butler already answers general questions at this point. To give it your mail and
 | Gmail | Create a Google OAuth client once, then `python -m butler gmail-login` | [docs/integrations/gmail.md](docs/integrations/gmail.md) |
 | Google Calendar | Same Google client + enable the Calendar API, then `python -m butler calendar-login` | [docs/integrations/calendar.md](docs/integrations/calendar.md) |
 | Todos | Nothing to set up | [docs/integrations/todos.md](docs/integrations/todos.md) |
+| Web search | Add `SERPER_API_KEY`, `TAVILY_API_KEY` and/or `FIRECRAWL_API_KEY` to `.env` | [docs/integrations/web-search.md](docs/integrations/web-search.md) |
 | Swiggy | `python -m butler swiggy-login` (phone number + OTP) | [docs/integrations/swiggy.md](docs/integrations/swiggy.md) |
 
 You can also connect them from the **Integrations** page of the web UI.
@@ -82,7 +84,7 @@ The full walkthrough is in **[Getting started](docs/getting-started.md)**.
 
 - **[Getting started](docs/getting-started.md):** from zero to a working assistant, step by step
 - **Interfaces:** [Web UI](docs/interfaces/web.md) · [Telegram](docs/interfaces/telegram.md) · [Terminal](docs/interfaces/cli.md)
-- **Integrations:** [Gmail](docs/integrations/gmail.md) · [Google Calendar](docs/integrations/calendar.md) · [Todos](docs/integrations/todos.md) · [Swiggy](docs/integrations/swiggy.md)
+- **Integrations:** [Gmail](docs/integrations/gmail.md) · [Google Calendar](docs/integrations/calendar.md) · [Todos](docs/integrations/todos.md) · [Web search](docs/integrations/web-search.md) · [Swiggy](docs/integrations/swiggy.md)
 - **[Configuration](docs/configuration.md):** every `.env` setting
 - **[Troubleshooting](docs/troubleshooting.md):** common problems and fixes
 - **[Architecture](docs/architecture.md):** the overview of how it works
@@ -116,7 +118,7 @@ Butler acts on **your** accounts, so treat it like a password manager:
 - **Agent memory is in-process:** web chats are saved (sidebar and transcripts survive restarts), but after a restart Butler doesn't remember the earlier context of a chat. Telegram and terminal chats aren't saved.
 - **Gmail is read-only:** no sending or deleting. **Calendar** covers your primary calendar only.
 - **Swiggy:** India only. Food, Instamart and Dineout are supported (not Scenes yet). Logins last 5 days, and Dineout paid deals and cancellations need the Swiggy app.
-- **Model choice:** works with `gpt-4o-mini`, but with all Swiggy services (49 tools) **`gpt-4.1-mini` is recommended**. It's much more reliable at carts and bookings. Set `OPENAI_MODEL`, or trim with `SWIGGY_SERVICES`.
+- **Model choice:** works with `gpt-4o-mini`, but with everything enabled (60+ tools, most of them Swiggy) **`gpt-4.1-mini` is recommended**. It's much more reliable at carts and bookings. Set `OPENAI_MODEL`, or trim with `SWIGGY_SERVICES`.
 
 ## Contributing
 

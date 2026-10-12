@@ -42,8 +42,9 @@ NOT_ALLOWED = "Swiggy is not available for this user."
 
 
 def _swiggy_allowed():
-    # Set per request by the caller, e.g. Telegram restricts it to the owner
-    return get_config().get("configurable", {}).get("swiggy_allowed", True)
+    # Set per request by the interface: Telegram allows restricted
+    # integrations (like Swiggy) only for the owner
+    return get_config().get("configurable", {}).get("allow_restricted", True)
 
 
 async def _call(tool, args):
@@ -131,6 +132,8 @@ def _wrap(tool, raw):
                 "tool": tool.name,
                 "args": args,
                 "details": details[:PREVIEW_CHARS] if details else None,
+                "restricted": True,   # only the owner may approve (Telegram)
+                "show_args": True,    # args carry payment method / address id
             })
             if not (answer or {}).get("approved"):
                 return (
@@ -177,10 +180,6 @@ def _openai_compatible(schema):
         rules.append(f"You must provide: {joiner.join(alternatives)}.")
 
     return schema, "\n\n" + " ".join(rules)
-
-
-def format_args(args):
-    return json.dumps(args, indent=2, ensure_ascii=False)
 
 
 async def load_swiggy_tools():

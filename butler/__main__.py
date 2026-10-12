@@ -1,58 +1,50 @@
-"""Command-line entry point.
+"""Command-line entry point: `python -m butler <command>`.
 
-    python -m butler chat           # terminal chat
-    python -m butler telegram       # run the Telegram bot
-    python -m butler web            # run the web UI (http://127.0.0.1:8000)
-    python -m butler gmail-login    # connect Gmail (Google login in the browser)
-    python -m butler calendar-login # connect Google Calendar
-    python -m butler swiggy-login   # connect Swiggy (phone + OTP in the browser)
-    python -m butler gmail [...]    # quick Gmail reader, e.g. `gmail updates --unread`
+Core commands:
+    chat        terminal chat
+    telegram    run the Telegram bot
+    web         run the web UI (http://127.0.0.1:8000)
+
+Integrations add their own, e.g. gmail-login, calendar-login, swiggy-login,
+and `gmail` (a quick Gmail reader: `python -m butler gmail updates --unread`).
 """
 
 import asyncio
 import sys
 
-COMMANDS = ("chat", "telegram", "web", "gmail-login", "calendar-login", "swiggy-login", "gmail")
 
-
-def main():
-    if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
-        print(__doc__)
-        sys.exit(1)
-
-    command = sys.argv.pop(1)
-
-    from butler.config import check_config
-    if command in ("chat", "telegram", "web"):
-        check_config(needs_telegram=command == "telegram")
-
-    if command == "chat":
+def _core_commands():
+    def chat():
         from butler.interfaces import cli
         asyncio.run(cli.main())
 
-    elif command == "telegram":
+    def telegram():
         from butler.interfaces import telegram_bot
         telegram_bot.main()
 
-    elif command == "web":
-        from butler.interfaces import web
-        web.main()
+    def web():
+        from butler.interfaces import web as web_ui
+        web_ui.main()
 
-    elif command == "gmail-login":
-        from butler.integrations.gmail import login as gmail_login
-        gmail_login.main()
+    return {"chat": chat, "telegram": telegram, "web": web}
 
-    elif command == "calendar-login":
-        from butler.integrations.calendar import login as calendar_login
-        calendar_login.main()
 
-    elif command == "swiggy-login":
-        from butler.integrations.swiggy import login
-        asyncio.run(login.main())
+def main():
+    from butler.config import check_config
+    from butler.integrations.registry import cli_commands
 
-    elif command == "gmail":
-        from butler.integrations.gmail.__main__ import main as gmail_main
-        gmail_main()
+    core = _core_commands()
+    commands = {**core, **cli_commands()}
+
+    if len(sys.argv) < 2 or sys.argv[1] not in commands:
+        print(__doc__)
+        print("Available commands: " + ", ".join(commands))
+        sys.exit(1)
+
+    command = sys.argv.pop(1)
+    if command in core:
+        check_config(needs_telegram=command == "telegram")
+    commands[command]()
 
 
 if __name__ == "__main__":

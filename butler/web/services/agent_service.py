@@ -9,8 +9,7 @@ import asyncio
 from langchain_core.messages import AIMessageChunk
 from langgraph.types import Command
 
-from butler.agent import build_graph, cancel_pending, pending_interrupt
-from butler.integrations.swiggy.config import ALL_SERVERS
+from butler.agent import build_graph, cancel_pending, loaded_tool_names, pending_interrupt
 
 
 class InterruptMismatch(Exception):
@@ -20,8 +19,7 @@ class InterruptMismatch(Exception):
 class AgentService:
     def __init__(self):
         self.graph = None
-        self.swiggy_loaded = False
-        self.swiggy_services = set()
+        self.tool_names = set()     # tools the current agent can run
         self._lock = asyncio.Lock()
 
     async def start(self):
@@ -35,17 +33,12 @@ class AgentService:
         """
         async with self._lock:
             self.graph = await build_graph()
-            tools = self.graph.get_graph().nodes["tools"].data.tools_by_name
-            self.swiggy_services = {
-                name.split("_", 1)[0] for name in tools
-                if name.split("_", 1)[0] in ALL_SERVERS
-            }
-            self.swiggy_loaded = bool(self.swiggy_services)
+            self.tool_names = loaded_tool_names(self.graph)
 
     @staticmethod
     def _config(thread_id):
-        # The web UI is used by the instance owner, so Swiggy is allowed
-        return {"configurable": {"thread_id": thread_id, "swiggy_allowed": True}}
+        # The web UI is used by the instance owner: restricted integrations allowed
+        return {"configurable": {"thread_id": thread_id, "allow_restricted": True}}
 
     # ------------------------------------------------------------------
     # Turns

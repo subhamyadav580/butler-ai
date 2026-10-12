@@ -28,6 +28,23 @@ That's expected: it's your own app. Click **Continue**.
 **Gmail worked for a week, then fails with `invalid_grant`**
 Apps in Google's *Testing* mode get logins that expire after about 7 days. Run `python -m butler gmail-login` again, or publish the app (see the [Gmail guide](integrations/gmail.md#good-to-know)).
 
+## Web search
+
+**Butler doesn't search, or says it can't access the internet**
+Web search is off until a provider key is set. Add `SERPER_API_KEY`, `TAVILY_API_KEY` or `FIRECRAWL_API_KEY` to `.env` and restart; the Integrations page should show **Web search: Connected**.
+
+**"Serper/Tavily/Firecrawl rejected the API key"** or **"rate limit or credits exhausted"**
+Check the key and remaining credits in the provider's dashboard ([Serper](https://serper.dev), [Tavily](https://tavily.com), [Firecrawl](https://firecrawl.dev)). With both configured, Butler falls back to the other provider automatically; you only see this when every provider fails.
+
+**"Web search is turned off"**
+Every provider is switched off on the Integrations page (Web search card). Switch one on; no restart is needed.
+
+**`Unknown WEB_SEARCH_PROVIDER`**
+Use `serper`, `tavily` or `firecrawl`, or leave it empty.
+
+**Results are for the wrong country**
+Set `WEB_SEARCH_COUNTRY` (for example `in`), or ask with the place in the question.
+
 ## Todos
 
 **Todos added on Telegram don't show on the Todos page**

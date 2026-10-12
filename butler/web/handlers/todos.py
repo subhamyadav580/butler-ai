@@ -42,7 +42,7 @@ async def create_todo(
         return Todo(**todos.add(request.title, request.due, request.list,
                                 request.priority, request.notes))
     except ValueError as error:
-        raise _bad_request(error)
+        raise _bad_request(error) from error
 
 
 async def update_todo(
@@ -57,14 +57,14 @@ async def update_todo(
             done=request.done,
         ))
     except TodoNotFound as error:
-        raise _not_found(error)
+        raise _not_found(error) from error
     except ValueError as error:
-        raise _bad_request(error)
+        raise _bad_request(error) from error
 
 
 async def delete_todo(todo_id: int, todos: TodoService = Depends(get_todo_service)):
     try:
         todos.delete(todo_id)
     except TodoNotFound as error:
-        raise _not_found(error)
+        raise _not_found(error) from error
     return {"ok": True}

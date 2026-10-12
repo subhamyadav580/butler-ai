@@ -21,6 +21,7 @@ This page is the overview. For details on any part, and for step-by-step guides 
           ▼                              ▼
  integrations/gmail · calendar    integrations/swiggy/
  integrations/todos (SQLite)      Swiggy MCP servers (OAuth 2.1 + PKCE)
+ integrations/websearch (Serper, Tavily, Firecrawl)
 ```
 
 - **One agent, every tool.** There's no intent router. The LLM sees every tool and decides which ones to call, if any. A single message can use several tools ("unread mails *and* 15% of 240").
@@ -35,16 +36,20 @@ This page is the overview. For details on any part, and for step-by-step guides 
 butler/
 ├── __main__.py              # `python -m butler <command>`
 ├── config.py                # .env settings, secret paths, time zone, startup checks
-├── db/                      # shared SQLite connection (data/butler.db)
+├── db/                      # shared SQLite connection + settings store (data/butler.db)
+├── utils/                   # stateless helpers shared by integrations (times.py: dates, time zones)
 ├── agent/
 │   ├── graph.py             # builds the agent: tools, LLM, agent ⇄ tools loop, checkpointer
-│   ├── prompts.py           # system prompt + one rules block per integration
+│   ├── prompts.py           # base system prompt; assembles each integration's section
 │   └── human.py             # interrupt helpers shared by all interfaces
 ├── integrations/
+│   ├── base.py              # Integration: the contract every integration implements
+│   ├── registry.py          # INTEGRATIONS: the one list everything reads
 │   ├── google_oauth.py      # shared Google login (Gmail, Calendar)
-│   ├── gmail/               # auth, client, query builder, parser, tools.py, login.py
-│   ├── calendar/            # auth, client, time helpers, tools.py (approvals), login.py
+│   ├── gmail/               # integration.py, tools.py, auth, client, query builder, parser, login.py
+│   ├── calendar/            # auth, client, tools.py (approvals), login.py
 │   ├── todos/               # repo.py (table), service.py (rules), tools.py: local, no login
+│   ├── websearch/           # base.py (types), providers/ (serper, tavily, firecrawl), registry.py (+ fallback), tools.py
 │   └── swiggy/              # MCP OAuth, MCP client, tools.py (approval wrappers), login.py
 ├── interfaces/
 │   ├── cli.py               # terminal chat
@@ -61,6 +66,12 @@ butler/
     └── dependencies.py      #   FastAPI dependency providers
 frontend/                    # React + Vite + TypeScript web UI
 ```
+
+## Integrations are plugins
+
+Each integration (Gmail, Calendar, Todos, web search, Swiggy) is a self-contained folder whose `integration.py` declares everything about it: its tools, its section of the system prompt, its Integrations-page card and Connect flow, its CLI login, and its UI labels and examples. [registry.py](../butler/integrations/registry.py) lists them, and the agent, CLI, web UI and Telegram loop over that list. None of them name a specific integration.
+
+Adding one is a folder plus one registry line; see [Adding tools → Add a new integration](internals/adding-tools.md#2-add-a-new-integration).
 
 ## Deep dives
 
@@ -81,6 +92,7 @@ Each part has its own page under [internals/](internals/README.md):
 
 ```bash
 pip install -e .
+pip install ruff && ruff check butler   # lint (rules in pyproject.toml)
 python -m butler web                 # API + built UI on :8000
 cd frontend && npm run dev           # UI with hot reload on :5173 (proxies /api)
 cd frontend && npm run build         # type-check + production build

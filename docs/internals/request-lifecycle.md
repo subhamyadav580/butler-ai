@@ -40,7 +40,7 @@ The response starts immediately; the body keeps arriving while the agent works.
 
 1. `cancel_pending()`: if this thread was waiting on a picker or approval, answer it with "cancel" first.
 2. `graph.astream({"messages": [user message]}, config, stream_mode=["messages", "updates"])`
-   - `config = {"configurable": {"thread_id": …, "swiggy_allowed": True}}`
+   - `config = {"configurable": {"thread_id": …, "allow_restricted": True}}` (the web UI is the owner)
 3. Each LLM token becomes `{"type": "token"}`, each tool name `{"type": "tool"}`, and a pause `{"type": "interrupt"}`.
 
 ## 5. The agent loop

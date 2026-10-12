@@ -8,7 +8,7 @@ from datetime import datetime, time as clock
 
 from butler.config import local_tz
 from butler.db import get_database
-from butler.integrations.calendar.times import human, parse_when
+from butler.utils.times import human, parse_when
 
 from .repo import TodoRepo
 

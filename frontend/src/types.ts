@@ -27,6 +27,10 @@ export interface ConfirmActionPayload {
   tool: string
   args: Record<string, unknown>
   details: string | null
+  /** Set by the tool: also show the raw args (e.g. Swiggy payment method). */
+  show_args?: boolean
+  /** Acts on the owner's account (orders, payments). */
+  restricted?: boolean
 }
 
 export type InterruptPayload = PickEmailPayload | ConfirmActionPayload
@@ -67,6 +71,15 @@ export interface TodoList {
   done: number
 }
 
+export interface WebSearchProvider {
+  name: string
+  title: string
+  key_setting: string
+  configured: boolean
+  enabled: boolean
+  primary: boolean
+}
+
 export interface IntegrationStatus {
   name: string
   title: string
@@ -74,6 +87,14 @@ export interface IntegrationStatus {
   state: 'connected' | 'disconnected' | 'needs_setup'
   detail: string
   connecting: boolean
+  can_connect: boolean
   error: string | null
   expires_at: number | null
+  needs_reload: boolean
+}
+
+/** Per-integration UI details, served by the backend (no per-integration UI code). */
+export interface Meta {
+  tool_labels: Record<string, string>
+  examples: string[]
 }

@@ -30,7 +30,7 @@ Rebuild the frontend (`npm run build`) after you pull updates that change `front
 - **Email picker:** when you ask to open an email, Butler shows a list. Click one to read it, or **Cancel**.
 - **Approvals:** before Butler places an order, changes an address or clears your cart, it shows a card with the details and **Approve / Reject**.
 - **Todos:** your todo list, grouped by list. Add, tick off, filter and delete. See [Todos](../integrations/todos.md).
-- **Integrations:** shows whether Gmail, Calendar and Swiggy are connected, how long the Swiggy login has left, which Swiggy services are loaded, and a **Connect** or **Reconnect** button.
+- **Integrations:** shows whether Gmail, Calendar and Swiggy are connected, how long the Swiggy login has left, which Swiggy services are loaded, and a **Connect** or **Reconnect** button. The **Web search** card has an on/off switch per provider and **Use first**.
 
 ## Where chats are stored
 
@@ -94,6 +94,7 @@ The UI is a thin client over a small JSON API. FastAPI serves interactive docs a
 | `GET` | `/api/integrations` | Connection status |
 | `POST` | `/api/integrations/{name}/connect` | Start a login (`gmail`, `calendar`, `swiggy`) |
 | `POST` | `/api/integrations/reload` | Reload the agent's tools |
+| `GET` / `PUT` | `/api/integrations/web-search` | Web search providers: list them, switch them on or off, choose which is used first |
 | `GET` | `/api/auth/status`, `POST /api/auth/login` | Password login |
 
 Stream events look like `data: {"type": "token" | "tool" | "interrupt" | "done" | "error", ...}`.

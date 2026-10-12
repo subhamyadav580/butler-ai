@@ -14,21 +14,27 @@ from telegram.ext import (
     filters,
 )
 
-from butler.agent import build_graph, cancel_pending, pending_interrupt, show_raw_args
+from butler.agent import (
+    build_graph,
+    cancel_pending,
+    format_args,
+    is_restricted,
+    pending_interrupt,
+    show_raw_args,
+)
 from butler.config import (
     TELEGRAM_ALLOWED_USER_IDS as ALLOWED_USER_IDS,
     TELEGRAM_BOT_TOKEN as TOKEN,
     TELEGRAM_OWNER_ID as OWNER_ID,
 )
-from butler.integrations.swiggy import NEEDS_APPROVAL as SWIGGY_APPROVALS
-from butler.integrations.swiggy import format_args
+from butler.integrations.registry import example_prompts
 
 TELEGRAM_MAX_CHARS = 4096
 PICK_PREFIX = "pick:"
 PICK_CANCEL = "cancel"
 CONFIRM_PREFIX = "confirm:"
 
-# Built in post_init (loading Swiggy's MCP tools is async)
+# Built in post_init (some integrations load their tools asynchronously)
 graph = None
 
 
@@ -36,18 +42,20 @@ graph = None
 # Helpers
 # ----------------------------------------------------------------------
 
-def can_use_swiggy(user):
-    # No owner configured: Swiggy is open to every allowed user
+def can_use_restricted(user):
+    # Restricted integrations (e.g. Swiggy) act on the owner's account.
+    # No owner configured: open to every allowed user
     if not OWNER_ID:
         return True
     return user is not None and user.id == OWNER_ID
 
 
 def may_answer(user, payload):
-    """Swiggy approvals act on the owner's account, so only Swiggy users may
-    approve them. Other approvals (calendar, todos) are open to any allowed user."""
-    if payload.get("type") == "confirm_action" and payload.get("tool") in SWIGGY_APPROVALS:
-        return can_use_swiggy(user)
+    """Restricted approvals (e.g. Swiggy orders) act on the owner's account, so
+    only the owner may answer them. Others (calendar, todos) are open to any
+    allowed user."""
+    if is_restricted(payload):
+        return can_use_restricted(user)
     return True
 
 
@@ -56,7 +64,7 @@ def graph_config(update: Update):
         "configurable": {
             # One LangGraph thread (conversation memory) per Telegram chat
             "thread_id": f"telegram-{update.effective_chat.id}",
-            "swiggy_allowed": can_use_swiggy(update.effective_user),
+            "allow_restricted": can_use_restricted(update.effective_user),
         }
     }
 
@@ -168,23 +176,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await is_allowed(update):
         return
 
-    examples = (
-        "• show my latest 5 mails in updates\n"
-        "• how many unread promotions do I have?\n"
-        "• open a mail from LinkedIn\n"
-        "• what's on my calendar tomorrow?\n"
-        "• block 30 min for a call on Friday at 4 pm\n"
-        "• remind me to pay rent on Friday\n"
+    examples = "".join(
+        f"• {example[0].lower()}{example[1:]}\n"
+        for example in example_prompts(can_use_restricted(update.effective_user))
     )
-    if can_use_swiggy(update.effective_user):
-        examples += (
-            "• find biryani near my office on Swiggy\n"
-            "• order milk and bread on Instamart\n"
-            "• book a table for 2 tonight in Connaught Place\n"
-        )
 
     await update.message.reply_text(
-        "Hi! Ask me anything, or about your Gmail — e.g.\n"
+        "Hi! Ask me anything, for example:\n"
         f"{examples}\n"
         "/reset clears our conversation memory.\n\n"
         f"Your Telegram user id: {update.effective_user.id}"
@@ -212,7 +210,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if payload:
         answer = typed_answer(payload, text)
         if answer and not may_answer(update.effective_user, payload):
-            await update.message.reply_text("Only the owner can approve Swiggy actions.")
+            await update.message.reply_text("Only the owner can approve this.")
             return
         if answer:
             await run_agent(update.message, Command(resume=answer), config)
@@ -280,7 +278,7 @@ async def handle_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # In group chats anyone could tap the button
     if not may_answer(update.effective_user, payload):
-        await query.message.reply_text("Only the owner can approve Swiggy actions.")
+        await query.message.reply_text("Only the owner can approve this.")
         return
 
     approved = query.data.removeprefix(CONFIRM_PREFIX) == "yes"
@@ -324,8 +322,8 @@ def main():
         )
     if not OWNER_ID:
         print(
-            "WARNING: TELEGRAM_OWNER_ID is not set — every allowed user can "
-            "use Swiggy on your account."
+            "NOTE: TELEGRAM_OWNER_ID is not set — every allowed user can use "
+            "restricted integrations (e.g. Swiggy orders) on your account."
         )
 
     app = Application.builder().token(TOKEN).post_init(post_init).build()

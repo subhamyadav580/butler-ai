@@ -1,4 +1,8 @@
-"""Turn the LLM's date/time strings into Google Calendar times, and back."""
+"""Date/time helpers shared by integrations (Calendar, Todos, …).
+
+Parse the LLM's date strings in the user's time zone, format them for
+people, and convert to/from Google Calendar's start/end fields.
+"""
 
 from datetime import date, datetime, timedelta
 

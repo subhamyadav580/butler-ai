@@ -2,10 +2,10 @@
 
 Everything Butler can *do* beyond talking is a **tool**: a function the LLM can call, with a name, a description, and typed arguments. To the agent, every tool looks the same: a LangChain `BaseTool` in the `all_tools` list. Behind that, Butler has two kinds.
 
-| | Python tools (Gmail, Calendar, Todos) | MCP tools (Swiggy) |
+| | Python tools (Gmail, Calendar, Todos, Web search) | MCP tools (Swiggy) |
 |---|---|---|
 | Defined | In our code, with `@tool` | By the remote service, discovered at startup |
-| Runs | Our Python calling Google's APIs, or Butler's own database (todos) | A JSON-RPC call to `mcp.swiggy.com/{food,im,dineout}` |
+| Runs | Our Python calling Google's APIs, a search provider's API, or Butler's own database (todos) | A JSON-RPC call to `mcp.swiggy.com/{food,im,dineout}` |
 | Sync/async | Sync, run in a thread by `ToolNode` | Async |
 | Wrapped by us | Not needed | Yes: access check, approvals, result cleanup, schema fix |
 | Code | [integrations/gmail/tools.py](../../butler/integrations/gmail/tools.py) | [integrations/swiggy/tools.py](../../butler/integrations/swiggy/tools.py) |
@@ -116,7 +116,7 @@ Raw MCP tools go to the agent only after `_wrap()` in [swiggy/tools.py](../../bu
 ```
 LLM calls instamart_checkout(args)
   │
-  ├─ 1. Access check   swiggy_allowed false (from the run's config)? → "not available for this user"
+  ├─ 1. Access check   allow_restricted false (from the run's config)? → "not available for this user"
   ├─ 2. Approval       name in NEEDS_APPROVAL? → build preview → interrupt(confirm_action) → rejected? stop
   ├─ 3. Call           the real MCP tool
   ├─ 4. Login errors   → "login expired, run swiggy-login"
@@ -160,7 +160,7 @@ Swiggy's server still validates the real rule.
 
 ### Rules the schema can't express
 
-Workflow knowledge goes in the prompt ([agent/prompts.py](../../butler/agent/prompts.py)): one shared `SWIGGY_RULES` block, plus `FOOD_RULES`, `INSTAMART_RULES` and `DINEOUT_RULES`, each included only when that service is loaded. Examples:
+Workflow knowledge goes in the prompt, in [swiggy/integration.py](../../butler/integrations/swiggy/integration.py): one shared `COMMON_RULES` block, plus `FOOD_RULES`, `INSTAMART_RULES` and `DINEOUT_RULES`, each included only when that service loaded. Examples:
 
 - `food_update_food_cart` needs `addressId` even though the schema doesn't list it.
 - `instamart_update_cart` **replaces the whole cart**, so always re-send the items already in it.
@@ -171,17 +171,18 @@ The prompt also overrides Swiggy's own tool descriptions where they clash with a
 
 ## How tools are registered
 
-[agent/graph.py](../../butler/agent/graph.py):
+Every integration hands its tools to the agent through its `integration.py`; the agent loops over the [registry](../../butler/integrations/registry.py):
 
 ```python
-swiggy_tools, swiggy_error = await load_swiggy_tools()   # [] if not connected
-all_tools = GMAIL_TOOLS + swiggy_tools
-
-llm.bind_tools(all_tools)                                 # the LLM sees the schemas
-ToolNode(all_tools, handle_tool_errors=True)              # the graph can run them
+# agent/graph.py, simplified
+for integration in INTEGRATIONS:
+    tools, warning = await integration.load_tools()   # [] if not configured
+    ...
+llm.bind_tools(all_tools)                             # the LLM sees the schemas
+ToolNode(all_tools, handle_tool_errors=True)          # the graph can run them
 ```
 
-A tool must be in **both**: bound to the LLM so it can be *called*, and in the `ToolNode` so it can be *run*.
+A tool must be in **both**: bound to the LLM so it can be *called*, and in the `ToolNode` so it can be *run*. The loop takes care of that; an integration only returns its list. See [Adding tools](adding-tools.md#2-add-a-new-integration).
 
 ## Good tool design
 

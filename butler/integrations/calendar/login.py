@@ -18,7 +18,7 @@ def main():
         calendar = Calendar(interactive=True)
         profile = calendar.profile()
     except CalendarLoginRequired as error:
-        raise SystemExit(str(error))
+        raise SystemExit(str(error)) from error
     except HttpError as error:
         text = str(error)
         if error.resp.status == 403 and ("accessNotConfigured" in text or "has not been used" in text):
@@ -27,7 +27,7 @@ def main():
                 "Google Cloud project. Enable it at "
                 "https://console.cloud.google.com/apis/library/calendar-json.googleapis.com "
                 "then run this again."
-            )
+            ) from error
         raise
     print(f"Google Calendar connected: {profile['calendar']} (time zone {profile['timeZone']})")
 
