@@ -45,13 +45,17 @@ def with_tool_results(messages):
     return fixed
 
 
-async def build_graph():
-    """Load every integration's tools and compile the agent."""
+async def build_graph(on_note=print):
+    """Load every integration's tools and compile the agent.
+
+    on_note: called with each startup note (e.g. "Swiggy: not connected…");
+    printed by default, collected by the terminal chat for its banner.
+    """
     loaded = []                      # [(integration, tools)] that have tools
     for integration in INTEGRATIONS:
         tools, warning = await integration.load_tools()
         if warning:
-            print(f"NOTE: {integration.title}: {warning}.")
+            on_note(f"NOTE: {integration.title}: {warning}.")
         if tools:
             loaded.append((integration, tools))
 

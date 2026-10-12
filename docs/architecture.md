@@ -41,7 +41,8 @@ butler/
 ├── agent/
 │   ├── graph.py             # builds the agent: tools, LLM, agent ⇄ tools loop, checkpointer
 │   ├── prompts.py           # base system prompt; assembles each integration's section
-│   └── human.py             # interrupt helpers shared by all interfaces
+│   ├── human.py             # interrupt helpers shared by all interfaces
+│   └── stream.py            # one turn as live events (web UI and terminal)
 ├── integrations/
 │   ├── base.py              # Integration: the contract every integration implements
 │   ├── registry.py          # INTEGRATIONS: the one list everything reads

@@ -38,7 +38,7 @@ Butler is **one LangGraph agent** that every interface shares. The interfaces on
 
 ```
 butler/
-├── agent/          graph.py (the loop) · prompts.py (assembles sections) · human.py (interrupt helpers)
+├── agent/          graph.py (the loop) · prompts.py (assembles sections) · human.py (interrupt helpers) · stream.py (live events)
 ├── integrations/   base.py (the contract) · registry.py (the list) · gmail/ · calendar/ · todos/ · websearch/ · swiggy/
 │                   each with an integration.py: tools, prompt rules, status, login, UI labels
 ├── db/             shared SQLite connection (chats, todos)

@@ -2,7 +2,7 @@
 
 The web UI shows replies word by word, plus a status line ("Searching your mail…") while tools run. This uses **plain HTTP with a streamed response in Server-Sent Events (SSE) format**, not WebSockets.
 
-Code: [web/services/agent_service.py](../../butler/web/services/agent_service.py) (`_stream`), [web/handlers/chat.py](../../butler/web/handlers/chat.py) (`_sse`), and [frontend/src/api.ts](../../frontend/src/api.ts) (`streamEvents`).
+Code: [agent/stream.py](../../butler/agent/stream.py) (`stream_events`: shared by the web UI and the terminal), [web/handlers/chat.py](../../butler/web/handlers/chat.py) (`_sse`), and [frontend/src/api.ts](../../frontend/src/api.ts) (`streamEvents`).
 
 ## One turn on the wire
 
@@ -33,7 +33,7 @@ Each turn is one request and one streamed response; no connection stays open bet
 
 ## Server side
 
-`AgentService._stream()` runs the graph with **two stream modes at once**:
+`stream_events()` in [agent/stream.py](../../butler/agent/stream.py) runs the graph with **two stream modes at once**:
 
 ```python
 async for mode, chunk in graph.astream(graph_input, config,
@@ -94,6 +94,7 @@ const reader = response.body.getReader()
 
 WebSockets (or a long-lived SSE channel) would only be worth it for **server-initiated** pushes, such as "your order is out for delivery" with no message from you first.
 
-## Telegram and the terminal
+## The terminal and Telegram
 
-They don't stream: they use `graph.ainvoke()` and send the whole reply at once. Telegram shows "typing…" while it waits.
+- **The terminal** streams too. It uses the same `stream_events()` and renders the events live with `rich`: Markdown that grows as tokens arrive, plus a spinner with the tool's label.
+- **Telegram** doesn't stream: it uses `graph.ainvoke()` and sends the whole reply at once, showing "typing…" while it waits.

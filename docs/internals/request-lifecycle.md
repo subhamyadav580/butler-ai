@@ -85,7 +85,7 @@ POST /api/chat/resume
 |---|---|---|---|
 | Input | `POST /api/chat/messages` | Telegram update → `handle_message` | `input()` |
 | `thread_id` | Browser UUID | `telegram-<chat_id>` | `cli` |
-| Run | `graph.astream` (streamed) | `graph.ainvoke` (whole reply) | `graph.ainvoke` |
+| Run | `stream_events` → SSE (streamed) | `graph.ainvoke` (whole reply) | `stream_events` → live in the terminal |
 | Picker / approval | Cards in the chat | Inline buttons | Numbered list, `y/n` |
 | Resume | `POST /api/chat/resume` | Button callback → `Command(resume=…)` | `Command(resume=…)` |
 | Transcript saved | ✅ SQLite | ❌ | ❌ |

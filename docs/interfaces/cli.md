@@ -9,26 +9,48 @@ python -m butler chat
 ```
 
 ```
-Chat with your assistant (type 'exit' to quit)
+╭────────────────────────────────────────────────────────────────╮
+│ Butler  · gpt-4.1-mini · /help for commands · Ctrl+D to quit   │
+│ ✓ Gmail   ✓ Google Calendar   ✓ Todos   ✓ Web search   ✓ Swiggy │
+╰────────────────────────────────────────────────────────────────╯
 
-You: How many unread mails in Social?
-AI: You have 5,965 unread emails in your Social category.
+You › How many unread mails in Social?
+⠹ Counting unread mail…
+You have 5,971 unread emails in the Social category.
 
-You: Open a mail from primary
-
+You › Open a mail from primary
 Which email do you want to open?
-   1. ● DSP Mutual Fund                 DSP Monthly Portfolios: Update for You
-   2.   Turing                          Reminder to update your interest…
-   0. Cancel
-Pick a number: 1
-AI: Here are the details of the selected email: …
+   #     From                 Subject
+   1  ●  Harsh Gupta          Re: Hello!
+   2     Kotak Securities     Monthly statement
+Pick 1-2, or 0 to cancel › 1
+…
+
+You › Clear my Swiggy food cart
+╭─ ⚠️  Clear your Swiggy Food cart? ─────────────╮
+│ food flush food cart                           │
+╰────────────────────────────────────────────────╯
+Approve? [y/N] › n
+Rejected. Nothing was changed.
 ```
 
-- **Email picker:** type the number of the email, or `0` to cancel. The dot (●) marks unread mail.
-- **Approvals:** Butler prints the action and its details and asks `Approve? (y/n)`.
-- **Leaving:** type `exit` or `quit`.
+- **Startup banner:** the model in use, and which integrations are ready (✓), not connected (○) or need setup (✗).
+- **Live replies:** answers stream in as Butler writes them, formatted as Markdown (bold, lists, tables). A status line shows what it's doing ("Searching your mail…", "Checking your calendar…").
+- **Email picker:** a numbered table; ● marks unread mail. Type the number, or `0` to cancel.
+- **Approvals:** a highlighted box with exactly what will happen (the email text, the order, the event), then `Approve? [y/N]`. Anything but `y` rejects.
 
-The conversation lasts for the session and is forgotten when you quit.
+## Commands and keys
+
+| | |
+|---|---|
+| `/help` | Commands and keys |
+| `/new` | Start a fresh conversation (Butler forgets the current one) |
+| `/integrations` | What's connected, with details |
+| `/exit`, `exit`, or **Ctrl+D** | Quit |
+| **↑ / ↓** | Recall earlier messages; history is kept between sessions in `data/cli_history` |
+| **Ctrl+C** | Stop the current answer (Butler stays open); at the prompt, clear the line |
+
+Each terminal session is its own conversation, and it's forgotten when you quit. Web UI chats are saved; terminal chats aren't.
 
 ## Connect accounts
 
@@ -63,7 +85,7 @@ python -m butler gmail starred --attachment
 ## All commands
 
 ```bash
-python -m butler web | telegram | chat | gmail-login | calendar-login | swiggy-login | gmail
+python -m butler     # lists every command, including ones integrations add
 ```
 
 After `pip install -e .`, the shorter `butler <command>` works too.

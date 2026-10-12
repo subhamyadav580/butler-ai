@@ -6,10 +6,10 @@ Server-Sent Events.
 
 import asyncio
 
-from langchain_core.messages import AIMessageChunk
 from langgraph.types import Command
 
 from butler.agent import build_graph, cancel_pending, loaded_tool_names, pending_interrupt
+from butler.agent.stream import stream_events
 
 
 class InterruptMismatch(Exception):
@@ -62,30 +62,8 @@ class AgentService:
         async for event in self._stream(Command(resume=answer), config):
             yield event
 
-    async def _stream(self, graph_input, config):
-        text = []
-
-        async for mode, chunk in self.graph.astream(
-            graph_input, config, stream_mode=["messages", "updates"]
-        ):
-            if mode == "messages":
-                message, metadata = chunk
-                if metadata.get("langgraph_node") != "agent":
-                    continue
-                if not isinstance(message, AIMessageChunk):
-                    continue
-                if message.content:
-                    text.append(message.content)
-                    yield {"type": "token", "content": message.content}
-                for call in message.tool_call_chunks or []:
-                    if call.get("name"):
-                        yield {"type": "tool", "name": call["name"]}
-
-            elif mode == "updates" and "__interrupt__" in chunk:
-                yield {"type": "interrupt", "payload": chunk["__interrupt__"][0].value}
-                return
-
-        yield {"type": "done", "content": "".join(text)}
+    def _stream(self, graph_input, config):
+        return stream_events(self.graph, graph_input, config)
 
     # ------------------------------------------------------------------
     # Agent memory (in RAM; lost on restart)
