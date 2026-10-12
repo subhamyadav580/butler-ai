@@ -25,12 +25,16 @@ Rebuild the frontend (`npm run build`) after you pull updates that change `front
 
 ## Using it
 
+![The web UI: an answer from Gmail and Calendar, then an approval card before a reply is sent](../images/web-approval.png)
+
 - **Chat:** type a message and press **Enter** (**Shift+Enter** for a new line). Replies appear as they're written, with a status line while Butler works ("Searching your mail…").
 - **Conversations:** **+ New chat** starts a fresh conversation. Earlier ones are listed in the sidebar. **Double-click** a title to rename it; the **×** deletes it.
 - **Email picker:** when you ask to open an email, Butler shows a list. Click one to read it, or **Cancel**.
 - **Approvals:** before Butler places an order, changes an address or clears your cart, it shows a card with the details and **Approve / Reject**.
 - **Todos:** your todo list, grouped by list. Add, tick off, filter and delete. See [Todos](../integrations/todos.md).
 - **Integrations:** shows whether Gmail, Calendar and Swiggy are connected, how long the Swiggy login has left, which Swiggy services are loaded, and a **Connect** or **Reconnect** button. Cards can have switches, such as Gmail's **Allow replying & sending**; the **Web search** card has an on/off switch per provider and **Use first**.
+
+![Integrations page](../images/web-integrations.png)
 
 ## Where chats are stored
 

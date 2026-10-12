@@ -8,31 +8,7 @@ The quickest way to talk to Butler, with no browser or bot to set up.
 python -m butler chat
 ```
 
-```
-╭────────────────────────────────────────────────────────────────╮
-│ Butler  · gpt-4.1-mini · /help for commands · Ctrl+D to quit   │
-│ ✓ Gmail   ✓ Google Calendar   ✓ Todos   ✓ Web search   ✓ Swiggy │
-╰────────────────────────────────────────────────────────────────╯
-
-You › How many unread mails in Social?
-⠹ Counting unread mail…
-You have 5,971 unread emails in the Social category.
-
-You › Open a mail from primary
-Which email do you want to open?
-   #     From                 Subject
-   1  ●  Harsh Gupta          Re: Hello!
-   2     Kotak Securities     Monthly statement
-Pick 1-2, or 0 to cancel › 1
-…
-
-You › Clear my Swiggy food cart
-╭─ ⚠️  Clear your Swiggy Food cart? ─────────────╮
-│ food flush food cart                           │
-╰────────────────────────────────────────────────╯
-Approve? [y/N] › n
-Rejected. Nothing was changed.
-```
+![Butler in the terminal: a calendar answer, an email picker, and an approval before sending a reply](../images/cli.svg)
 
 - **Startup banner:** the model in use, and which integrations are ready (✓), not connected (○) or need setup (✗).
 - **Live replies:** answers stream in as Butler writes them, formatted as Markdown (bold, lists, tables). A status line shows what it's doing ("Searching your mail…", "Checking your calendar…").

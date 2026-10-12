@@ -6,12 +6,12 @@ Butler can read your **primary Google Calendar**, find free time, and **add, mov
 
 ```
 What's on my calendar tomorrow?
-When is my next meeting with Priya?
+When is my next meeting with Ankit?
 Am I free on Friday afternoon?
 Find me a free hour on Wednesday or Thursday
 Block 30 minutes for a call on Friday at 4 pm             ← asks you to Approve
 Add "Dentist" next Tuesday 10:30 at Apollo Clinic           ← asks you to Approve
-Set up a 1-hour meeting with priya@example.com tomorrow at 3 with a Meet link
+Set up a 1-hour meeting with ankit@example.com tomorrow at 3 with a Meet link
 Move my 3 pm meeting to 5 pm                                ← asks you to Approve
 Cancel tomorrow's standup                                   ← asks you to Approve
 ```
@@ -71,9 +71,9 @@ BUTLER_TIMEZONE=Asia/Kolkata
 
 ```
 ⚠️ Add this event to your Google Calendar?
-Title: Call with Priya
+Title: Call with Ankit
 When: Fri 16 Oct 2026, 4:00 PM → Fri 16 Oct 2026, 4:30 PM
-Guests: priya@example.com
+Guests: ankit@example.com
 ⚠️ Google will email invitations to these guests.
                                              [Reject] [Approve]
 ```

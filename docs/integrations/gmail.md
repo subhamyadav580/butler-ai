@@ -8,7 +8,7 @@ Butler can **read** your mailbox: list, search, count and open emails. If you sw
 How many unread mails do I have in Promotions?
 Show my latest 10 mails in Updates from LinkedIn
 Any unread mail with attachments since 2026/10/01?
-What did I send to priya@example.com last month?
+What did I send to ankit@example.com last month?
 Open a mail from Amazon                    ← shows a picker, then the full email
 ```
 
@@ -24,7 +24,7 @@ Off by default. To turn it on:
 Then you can ask:
 
 ```
-Reply to Priya's dinner email: yes, Friday at 8 works
+Reply to Ankit's dinner email: yes, Friday at 8 works
 Reply all to the project thread saying I'll send the slides tonight
 Send an email to ravi@example.com saying the report is ready
 Draft a reply to the landlord asking to move the visit to Sunday   ← saved to Drafts, never sent

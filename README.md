@@ -12,8 +12,8 @@ Butler: Which email do you want to open?   [Your weekly job alerts] [Cancel]
 You:    remind me to pay rent on Friday, it's important
 Butler: Added "Pay rent", due Fri 16 Oct, high priority. Want me to put it on your calendar too?
 
-You:    block 30 min for a call with priya@example.com on Friday at 4 pm
-Butler: ⚠️ Add this event to your Google Calendar?  Fri 16 Oct, 4:00–4:30 PM · invites priya@example.com   [Approve] [Reject]
+You:    block 30 min for a call with ankit@example.com on Friday at 4 pm
+Butler: ⚠️ Add this event to your Google Calendar?  Fri 16 Oct, 4:00–4:30 PM · invites ankit@example.com   [Approve] [Reject]
 
 You:    add 1 veg biryani from Behrouz to my cart
 Butler: Added. Item total ₹399 · taxes ₹69.85 · to pay ₹469. How would you like to pay?
@@ -23,6 +23,10 @@ Butler: ⚠️ Book this table on Swiggy Dineout?  Guests: 2 · Sun 11 Oct, 7:00
 ```
 
 Butler is open source and runs on your own machine. You connect **your own** accounts, and your tokens stay in a local `secrets/` folder.
+
+<p align="center">
+  <img src="docs/images/butler-demo.gif" alt="Butler in the web UI: answers from Gmail and Calendar, opens an email from a picker, and asks for approval before sending a reply" width="860">
+</p>
 
 ## What it can do
 
@@ -47,6 +51,23 @@ All three use the same agent, so pick whichever you like, or run several at once
 | 🌐 **Web UI** | `python -m butler web` → open http://127.0.0.1:8000 | Day-to-day use on your computer; connecting accounts |
 | ✈️ **Telegram** | `python -m butler telegram` | Using Butler from your phone, anywhere |
 | ⌨️ **Terminal** | `python -m butler chat` | Quick questions, scripting, debugging |
+
+## Screenshots
+
+These are captures of the running app: real UI, real agent, real model answers. The mailbox and calendar are sample data, so no one's real inbox is shown.
+
+| Chat: Gmail + Calendar in one answer | Pick an email to open |
+|---|---|
+| ![Chat answering from Gmail and Google Calendar](docs/images/web-chat.png) | ![Email picker](docs/images/web-picker.png) |
+| **Approve before anything is sent** | **Todos** |
+| ![Approval card for an email reply](docs/images/web-approval.png) | ![Todos page](docs/images/web-todos.png) |
+| **Integrations and switches** | **Terminal** (`python -m butler chat`) |
+| ![Integrations page](docs/images/web-integrations.png) | ![Terminal chat](docs/images/cli.svg) |
+
+<details>
+<summary>On a phone, in dark mode</summary>
+<p align="center"><img src="docs/images/web-mobile-dark.png" alt="Butler on a phone in dark mode" width="300"></p>
+</details>
 
 ## Quick start
 
