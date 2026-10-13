@@ -27,6 +27,8 @@ export interface ConfirmActionPayload {
   tool: string
   args: Record<string, unknown>
   details: string | null
+  /** Set by the tool: `details` is Markdown (e.g. Zepto's order preview). */
+  details_markdown?: boolean
   /** Set by the tool: also show the raw args (e.g. Swiggy payment method). */
   show_args?: boolean
   /** Acts on the owner's account (orders, payments). */

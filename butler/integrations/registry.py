@@ -6,13 +6,16 @@ agent, prompt, CLI, web UI and Telegram all read this list.
 """
 
 from .calendar.integration import INTEGRATION as calendar
+from .groceries.integration import INTEGRATION as groceries
 from .gmail.integration import INTEGRATION as gmail
 from .swiggy.integration import INTEGRATION as swiggy
 from .todos.integration import INTEGRATION as todos
 from .websearch.integration import INTEGRATION as web_search
+from .zepto.integration import INTEGRATION as zepto
 
 # Order = order of their sections in the system prompt and cards in the UI
-INTEGRATIONS = [gmail, calendar, todos, web_search, swiggy]
+# groceries comes after the grocery apps: it compares their loaded tools
+INTEGRATIONS = [gmail, calendar, todos, web_search, swiggy, zepto, groceries]
 
 
 def get_integration(name):

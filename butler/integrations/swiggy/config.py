@@ -37,11 +37,9 @@ EXCLUDED_TOOLS = {
 # Holds the OAuth access token and the dynamically registered client
 TOKEN_FILE = str(SECRETS_DIR / "swiggy_token.json")
 
-# Swiggy allows http://localhost redirects for development without approval
+# Login redirect: http://localhost:<port>/callback (Swiggy allows localhost without approval)
 REDIRECT_PORT = 8765
-REDIRECT_URI = f"http://localhost:{REDIRECT_PORT}/callback"
 
-CLIENT_NAME = "Butler"
 SCOPES = "mcp:tools"
 
 LOGIN_COMMAND = "python -m butler swiggy-login"

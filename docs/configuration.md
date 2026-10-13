@@ -60,7 +60,7 @@ Real environment variables take priority over `.env`.
 |---|---|---|
 | `TELEGRAM_BOT_TOKEN` | (required for Telegram) | Token from [@BotFather](https://t.me/BotFather) |
 | `TELEGRAM_ALLOWED_USER_IDS` | (empty: nobody) | Comma-separated Telegram user IDs allowed to use the bot. Send `/start` to the bot to see yours |
-| `TELEGRAM_OWNER_ID` | (empty: all allowed users) | The only user who may use Swiggy |
+| `TELEGRAM_OWNER_ID` | (empty: all allowed users) | The only user who may use Swiggy and Zepto |
 
 ### Paths
 
@@ -81,6 +81,7 @@ None of these are ever committed; the folder is git-ignored.
 | `gmail_token.json` | `gmail-login` | Gmail access token and refresh token |
 | `calendar_token.json` | `calendar-login` | Google Calendar access token and refresh token |
 | `swiggy_token.json` | `swiggy-login` | Swiggy access token for all services (lasts 5 days) and registered client |
+| `zepto_token.json` | `zepto-login` | Zepto access token, refresh token and registered client |
 
 Back the folder up if you move Butler to another machine. Delete a token file to disconnect that account.
 

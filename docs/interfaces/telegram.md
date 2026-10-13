@@ -30,7 +30,7 @@ Anyone can find a Telegram bot by its username, so Butler **denies everyone by d
 # Only these Telegram users may use the bot (comma-separated)
 TELEGRAM_ALLOWED_USER_IDS=123456789
 
-# Only this user may use Swiggy (which orders on YOUR account)
+# Only this user may use Swiggy and Zepto (which order on YOUR account)
 TELEGRAM_OWNER_ID=123456789
 ```
 
@@ -39,13 +39,13 @@ Restart the bot. You now have access; anyone else still gets "Sorry, you're not 
 | Setting | Empty means | Set means |
 |---|---|---|
 | `TELEGRAM_ALLOWED_USER_IDS` | **Nobody** can use the bot | Only these users: they can read your Gmail and see and edit your calendar and todos |
-| `TELEGRAM_OWNER_ID` | Every allowed user can use your Swiggy account | Only this user gets Swiggy, and only they can approve Swiggy actions. Others still get Gmail, Calendar, Todos and chat |
+| `TELEGRAM_OWNER_ID` | Every allowed user can use your Swiggy and Zepto accounts | Only this user gets Swiggy and Zepto, and only they can approve their actions. Others still get Gmail, Calendar, Todos and chat |
 
 ## Using it
 
 - **Chat:** just type.
 - **Email picker:** tap the button for the email you want, type its number, or tap **Cancel**.
-- **Approvals:** tap **✅ Approve** or **❌ Reject**, or type `yes` / `no`. This covers Swiggy orders and bookings, calendar changes and deleting todos.
+- **Approvals:** tap **✅ Approve** or **❌ Reject**, or type `yes` / `no`. This covers Swiggy and Zepto orders, Swiggy bookings, calendar changes and deleting todos.
 - **Changing your mind:** sending a new message while a question is open cancels the question.
 - **`/start`:** shows help and your user ID.
 - **`/reset`:** clears this chat's memory.

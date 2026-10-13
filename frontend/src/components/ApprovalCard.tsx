@@ -1,4 +1,5 @@
 import type { ConfirmActionPayload } from '../types'
+import { Markdown } from './Markdown'
 
 interface Props {
   payload: ConfirmActionPayload
@@ -16,7 +17,14 @@ export function ApprovalCard({ payload, disabled, onAnswer }: Props) {
   return (
     <div className="card warning">
       <div className="card-title">⚠️ {payload.question}</div>
-      {payload.details && <pre className="code details">{payload.details}</pre>}
+      {payload.details &&
+        (payload.details_markdown ? (
+          <div className="details details-markdown">
+            <Markdown text={payload.details} />
+          </div>
+        ) : (
+          <pre className="code details">{payload.details}</pre>
+        ))}
       {args && <pre className="code">{args}</pre>}
       <div className="card-actions">
         <button className="btn ghost" disabled={disabled} onClick={() => onAnswer(false)}>

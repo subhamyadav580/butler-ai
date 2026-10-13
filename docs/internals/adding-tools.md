@@ -57,7 +57,7 @@ Use an existing integration as your template:
 |---|---|
 | uses Google's APIs (OAuth) | [`calendar/`](../../butler/integrations/calendar/) |
 | needs no login (local data, or an API key in `.env`) | [`todos/`](../../butler/integrations/todos/) or [`websearch/`](../../butler/integrations/websearch/) |
-| talks to an MCP server | [`swiggy/`](../../butler/integrations/swiggy/) |
+| talks to an MCP server | [`zepto/`](../../butler/integrations/zepto/) (one server, the simplest) or [`swiggy/`](../../butler/integrations/swiggy/) (several) |
 
 ### 2.1 The folder
 
@@ -151,6 +151,7 @@ What each part does:
 | `reload_on_connect` | rebuild the agent after connecting (tools that load at startup) | `False` |
 | `cli_commands` | extra CLI commands, like Gmail's `gmail` reader | none |
 | `options()`, `set_option()` | on/off switches on its card (Gmail: **Allow replying & sending**). Store values with `butler.db.get_settings()` so every process sees changes at once; read them inside tools or `rules()` so they apply without a restart | no switches |
+| `hides_tools()` | tools of *other* integrations to hide while this one is loaded, because it replaces them. [Groceries](../integrations/groceries.md) hides each app's product search so every grocery search goes through `search_groceries` | none |
 
 **Logins:** never open a browser from a tool. Follow the Gmail pattern: `interactive=False` raises "not connected, run `notes-login`", and only `login()` and `connect()` may open a browser. For Google services, use the shared [google_oauth.py](../../butler/integrations/google_oauth.py) (`get_credentials` and `google_status`).
 
@@ -161,7 +162,7 @@ One line in [butler/integrations/registry.py](../../butler/integrations/registry
 ```python
 from .notes.integration import INTEGRATION as notes
 
-INTEGRATIONS = [gmail, calendar, todos, web_search, swiggy, notes]
+INTEGRATIONS = [gmail, calendar, todos, web_search, swiggy, zepto, notes]
 ```
 
 The order is the order of prompt sections and Integrations-page cards. Restart Butler, and the integration is in the agent, the prompt, the CLI, the web UI and Telegram.
@@ -215,7 +216,7 @@ async def get_<name>_tools():
             "transport": "streamable_http",                  # or "stdio" for a local process
             "url": "https://example.com/mcp",
             "headers": {"Authorization": f"Bearer {API_KEY}"},   # API-key servers
-            # "auth": OAuthClientProvider(...),              # OAuth servers (see swiggy/auth.py)
+            # "auth": make_auth(...),                        # OAuth servers: see mcp_oauth.py, zepto/auth.py
         }
     })
     return await client.get_tools()
@@ -225,17 +226,18 @@ A local server started as a subprocess uses `{"transport": "stdio", "command": "
 
 Then:
 
-1. **Wrap the tools.** Reuse the ideas in `swiggy/tools.py`:
-   - `_openai_compatible()`: needed if the server's schemas use top-level `anyOf`/`oneOf`
-   - `_to_text()`: flatten MCP content blocks
-   - an approval set for risky tools
+1. **Log in, if the server uses OAuth.** [`mcp_oauth.py`](../../butler/integrations/mcp_oauth.py) does the whole flow (client registration, PKCE, browser login, token file, refresh). A service only supplies its settings, as in [`zepto/auth.py`](../../butler/integrations/zepto/auth.py): server URL, token file and a free localhost port.
+2. **Wrap the tools.** [`zepto/tools.py`](../../butler/integrations/zepto/tools.py) is the template:
+   - `openai_compatible()` from [`mcp_tools.py`](../../butler/integrations/mcp_tools.py): needed if the server's schemas use top-level `anyOf`/`oneOf`
+   - `to_text()` from `mcp_tools.py`: flatten MCP content blocks
+   - which tools need approval: a fixed dict (Swiggy's `NEEDS_APPROVAL`) or a rule (Zepto's `needs_approval()`)
    - turn auth errors into a clear "run `<name>-login`" message
-2. **Make it an integration** (recipe 2): return the wrapped tools from `load_tools()` (async is fine), or `[]` with a reason when it isn't configured, so Butler still starts. Set `restricted = True` if it can spend money or change accounts.
-3. **Register it and document it**, as in recipe 2.
+3. **Make it an integration** (recipe 2): return the wrapped tools from `load_tools()` (async is fine), or `[]` with a reason when it isn't configured, so Butler still starts. Set `restricted = True` if it can spend money or change accounts.
+4. **Register it and document it**, as in recipe 2.
 
 ## 5. Require approval for a tool
 
-**MCP tools:** add the tool's (prefixed) name to `NEEDS_APPROVAL` in the integration's `tools.py`, with the question to show. Optionally add a preview in `_preview()`.
+**MCP tools:** for Swiggy, add the tool's (prefixed) name to `NEEDS_APPROVAL` in `swiggy/tools.py`, with the question to show, and optionally a preview in `_preview()`. Zepto decides by rule in `needs_approval()`, so most new tools are covered already.
 
 **Your own Python tools:** call `interrupt()` before doing anything irreversible:
 

@@ -6,6 +6,7 @@ with Command(resume=<answer>).
 """
 
 import json
+import re
 
 from langgraph.types import Command
 
@@ -49,6 +50,16 @@ def is_restricted(payload):
     """Approvals marked "restricted" act on the owner's account (orders,
     payments): only users allowed restricted integrations may answer them."""
     return bool(payload.get("restricted"))
+
+
+def details_text(payload):
+    """The approval's `details` as plain text, for interfaces that don't render
+    Markdown (Telegram). Tools set "details_markdown": True when their
+    details are Markdown (Zepto's order preview)."""
+    details = payload.get("details") or ""
+    if payload.get("details_markdown"):
+        details = re.sub(r"\*\*|__|`", "", details)
+    return details
 
 
 def format_args(args):

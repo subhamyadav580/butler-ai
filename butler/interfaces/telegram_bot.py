@@ -17,6 +17,7 @@ from telegram.ext import (
 from butler.agent import (
     build_graph,
     cancel_pending,
+    details_text,
     format_args,
     is_restricted,
     pending_interrupt,
@@ -118,7 +119,7 @@ async def send_pick_list(message, payload):
 async def send_confirm(message, payload):
     text = f"⚠️ {payload['question']}"
     if payload.get("details"):
-        text += f"\n\n{payload['details']}"
+        text += f"\n\n{details_text(payload)}"
     if show_raw_args(payload):
         text += f"\n\n{format_args(payload['args'])}"
 

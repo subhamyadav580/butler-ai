@@ -34,9 +34,9 @@ secrets/gmail_token.json  ── access token + refresh token
 
 Same flow as Gmail, through the shared helper [integrations/google_oauth.py](../../butler/integrations/google_oauth.py), with its own token (`secrets/calendar_token.json`) and scope (`calendar.events`: read and edit events). It uses the same `google_client_secret.json`; the Calendar API must be enabled in that Google Cloud project. Creating, changing and deleting events go through `interrupt()` approvals, and the card warns when Google will email guests.
 
-### Swiggy: MCP OAuth 2.1 with PKCE
+### Swiggy and Zepto: MCP OAuth 2.1 with PKCE
 
-Code: [integrations/swiggy/auth.py](../../butler/integrations/swiggy/auth.py)
+Code: [integrations/mcp_oauth.py](../../butler/integrations/mcp_oauth.py) (shared), with each service's settings in [swiggy/auth.py](../../butler/integrations/swiggy/auth.py) and [zepto/auth.py](../../butler/integrations/zepto/auth.py). The Swiggy flow:
 
 ```
 python -m butler swiggy-login
@@ -57,18 +57,22 @@ secrets/swiggy_token.json  ── access token, registered client, expires_at
 - **At startup:** if there's no token, or it has expired, Butler skips Swiggy entirely (`load_swiggy_tools`) and prints one line, instead of failing with an OAuth traceback.
 - **During a chat:** if a call fails because the login expired, the tool returns "Swiggy login has expired. Run `swiggy-login`".
 
+**Zepto** uses the same flow against `https://auth.zepto.co.in` (`python -m butler zepto-login`, redirect to `http://localhost:8766/callback`, token in `secrets/zepto_token.json`). The difference: Zepto issues **refresh tokens**, so the MCP SDK refreshes the access token by itself and the login keeps working. Butler requests no scopes of its own; the SDK asks for the ones Zepto's server advertises.
+
 ### Where secrets live
 
 ```
 secrets/            ← git-ignored, created by you and by the login commands
 ├── google_client_secret.json
 ├── gmail_token.json
-└── swiggy_token.json
+├── calendar_token.json
+├── swiggy_token.json
+└── zepto_token.json
 .env                ← git-ignored: API keys and settings
 data/butler.db      ← git-ignored: saved web chats, todos, settings (e.g. web search providers)
 ```
 
-Treat `secrets/` like a password vault: anyone with these files can read your Gmail and use your Swiggy account.
+Treat `secrets/` like a password vault: anyone with these files can read your Gmail and use your Swiggy and Zepto accounts.
 
 ## Interface access
 
@@ -93,11 +97,11 @@ Code: [interfaces/telegram_bot.py](../../butler/interfaces/telegram_bot.py)
 | Setting | Empty | Set |
 |---|---|---|
 | `TELEGRAM_ALLOWED_USER_IDS` | Nobody can use the bot (deny by default) | Only these users; others are refused and shown their ID |
-| `TELEGRAM_OWNER_ID` | Every allowed user can use Swiggy | Only this user gets Swiggy tools and can approve Swiggy actions. Calendar and todo approvals stay open to every allowed user |
+| `TELEGRAM_OWNER_ID` | Every allowed user can use Swiggy and Zepto | Only this user gets Swiggy and Zepto tools and can approve their actions. Calendar and todo approvals stay open to every allowed user |
 
 Restricted access is enforced in three places:
-- Integrations marked `restricted = True` (Swiggy) aren't bound to the LLM for users without access (`allow_restricted` in the run's config).
-- Every Swiggy tool also checks that flag before running.
+- Integrations marked `restricted = True` (Swiggy, Zepto) aren't bound to the LLM for users without access (`allow_restricted` in the run's config).
+- Every Swiggy and Zepto tool also checks that flag before running.
 - Their approvals carry `"restricted": True`, so only the owner can tap Approve, which matters in group chats.
 
 ## Action safety
@@ -105,6 +109,7 @@ Restricted access is enforced in three places:
 - **Gmail:** sending is off by default. When on, every reply or new email needs **Approve** (owner-only on Telegram); drafts are never sent.
 - **Calendar:** creating, changing and deleting events always need **Approve**. Guests are only emailed when an event has attendees, and the card says so.
 - **Swiggy:** every tool in `NEEDS_APPROVAL` always needs **Approve**: placing or confirming orders (Food, Instamart), booking a table (Dineout), confirming payments, adding or deleting addresses, and clearing carts. Rejecting, ignoring, or moving on never runs them. See [Human in the loop](human-in-the-loop.md).
+- **Zepto:** placing an order (`confirmOrder=true` on any of the four order tools), adding an address and changing your name need **Approve**; the card shows Zepto's order preview. Reads, cart edits and choosing an address don't. A tool Zepto adds later asks first unless its name says it only reads (`needs_approval` in [zepto/tools.py](../../butler/integrations/zepto/tools.py)).
 - **Errors:** tool failures become messages to the LLM, never crashes or partial actions.
 
 ## Checklist before sharing your instance

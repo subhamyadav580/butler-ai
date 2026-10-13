@@ -11,6 +11,7 @@ Each step is useful on its own, so you can stop after any of them.
 | [3. Connect Gmail](#3-connect-gmail) | "How many unread mails…", "open the mail from…" | 8 min |
 | [3b. Connect Google Calendar](#3b-connect-google-calendar-optional) | "What's on tomorrow?", "block 30 min on Friday" | 2 min |
 | [4. Connect Swiggy](#4-connect-swiggy-optional) | Food delivery, Instamart groceries, Dineout tables (India) | 1 min |
+| [4b. Connect Zepto](#4b-connect-zepto-optional) | Groceries and essentials in minutes (India) | 1 min |
 | [5. Pick an interface](#5-pick-an-interface) | Web UI, Telegram, or terminal | 2 min |
 
 ## Before you start
@@ -21,7 +22,7 @@ You need:
 - **An OpenAI API key** from [platform.openai.com/api-keys](https://platform.openai.com/api-keys). Butler uses `gpt-4o-mini` by default, which costs a fraction of a cent per message.
 - **Node.js 20 or newer**, only for the web UI. Check with `node --version`.
 - **A Google account**, for Gmail.
-- **A Swiggy account and an Indian phone number**, for Swiggy.
+- **A Swiggy or Zepto account and an Indian phone number**, for Swiggy or Zepto.
 
 ## 1. Install
 
@@ -116,6 +117,14 @@ python -m butler swiggy-login
 A browser opens. Enter your phone number and the OTP. The terminal then lists Swiggy's tools and your saved addresses.
 
 Swiggy logins expire after **5 days**; run the command again when Butler tells you. See **[the Swiggy guide](integrations/swiggy.md)**.
+
+## 4b. Connect Zepto (optional)
+
+```bash
+python -m butler zepto-login
+```
+
+A browser opens. Enter your phone number and the OTP. The terminal lists Zepto's tools and which ones will ask for your approval. Zepto logins refresh themselves. See **[the Zepto guide](integrations/zepto.md)**.
 
 ## 5. Pick an interface
 

@@ -1,10 +1,11 @@
-import json
 import time
 from datetime import datetime
 
 from langchain_core.tools import StructuredTool
 from langgraph.config import get_config
 from langgraph.types import interrupt
+
+from butler.integrations.mcp_tools import GROCERY_SEARCH_NOTE, openai_compatible, to_text
 
 from .auth import FileTokenStorage, describe_error, is_login_error
 from .client import get_swiggy_tools
@@ -33,6 +34,10 @@ NEEDS_APPROVAL = {
 
 PREVIEW_CHARS = 1500
 
+# The unwrapped Swiggy tools of the running agent, by name: other integrations
+# (groceries' price comparison) call read-only ones directly
+RAW_TOOLS = {}
+
 LOGIN_EXPIRED = (
     "Swiggy login has expired. Tell the user to run "
     f"`{LOGIN_COMMAND}` on the machine running the assistant."
@@ -54,17 +59,7 @@ async def _call(tool, args):
         if is_login_error(error):
             return LOGIN_EXPIRED
         raise
-    return _strip_widget_notes(_to_text(result))
-
-
-def _to_text(result):
-    # MCP results come back as content blocks: [{"type": "text", "text": ...}]
-    if isinstance(result, list):
-        return "\n".join(
-            block.get("text", "") if isinstance(block, dict) else str(block)
-            for block in result
-        )
-    return str(result)
+    return _strip_widget_notes(to_text(result))
 
 
 # Swiggy assumes a client that renders a cart/address "widget" and tells the
@@ -143,43 +138,18 @@ def _wrap(tool, raw):
 
         return await _call(tool, args)
 
-    schema, extra_rules = _openai_compatible(tool.args_schema)
+    schema, extra_rules = openai_compatible(tool.args_schema)
 
     return StructuredTool.from_function(
         coroutine=run,
         name=tool.name,
-        description=tool.description + extra_rules,
+        description=(GROCERY_SEARCH_NOTE if tool.name in GROCERY_SEARCH_TOOLS else "")
+        + tool.description + extra_rules,
         args_schema=schema,
     )
 
 
-TOP_LEVEL_COMBINATORS = ("anyOf", "oneOf", "allOf")
-
-
-def _openai_compatible(schema):
-    """OpenAI rejects anyOf/oneOf/allOf at the top level of a tool schema.
-
-    Swiggy uses them for "addressId OR latitude+longitude". Drop them from
-    the schema and state the rule in the description instead; the Swiggy
-    server still validates it.
-    """
-    if not any(key in schema for key in TOP_LEVEL_COMBINATORS):
-        return schema, ""
-
-    schema = dict(schema)
-    rules = []
-    for key in TOP_LEVEL_COMBINATORS:
-        options = schema.pop(key, None)
-        if not options:
-            continue
-        alternatives = [
-            " + ".join(option.get("required", [])) or json.dumps(option)
-            for option in options
-        ]
-        joiner = " AND " if key == "allOf" else " OR "
-        rules.append(f"You must provide: {joiner.join(alternatives)}.")
-
-    return schema, "\n\n" + " ".join(rules)
+GROCERY_SEARCH_TOOLS = {"instamart_search_products", "instamart_your_go_to_items"}
 
 
 async def load_swiggy_tools():
@@ -211,6 +181,8 @@ async def load_swiggy_tools():
             return [], problem
 
     raw = {tool.name: tool for tool in tools}
+    RAW_TOOLS.clear()
+    RAW_TOOLS.update(raw)
     return [_wrap(tool, raw) for tool in tools], problem
 
 
@@ -228,5 +200,5 @@ async def smoke_test(tools):
     by_name = {tool.name: tool for tool in tools}
     for name in SMOKE_TEST_TOOLS:
         if name in by_name:
-            return _to_text(await by_name[name].ainvoke({}))
+            return to_text(await by_name[name].ainvoke({}))
     return "(no address tool among the enabled services)"

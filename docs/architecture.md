@@ -19,8 +19,8 @@ This page is the overview. For details on any part, and for step-by-step guides 
                          │ tool calls
           ┌──────────────┴───────────────┐
           ▼                              ▼
- integrations/gmail · calendar    integrations/swiggy/
- integrations/todos (SQLite)      Swiggy MCP servers (OAuth 2.1 + PKCE)
+ integrations/gmail · calendar    integrations/swiggy/ · zepto/
+ integrations/todos (SQLite)      Swiggy and Zepto MCP servers (OAuth 2.1 + PKCE)
  integrations/websearch (Serper, Tavily, Firecrawl)
 ```
 
@@ -47,11 +47,15 @@ butler/
 │   ├── base.py              # Integration: the contract every integration implements
 │   ├── registry.py          # INTEGRATIONS: the one list everything reads
 │   ├── google_oauth.py      # shared Google login (Gmail, Calendar)
+│   ├── mcp_oauth.py         # shared MCP server login (Swiggy, Zepto): token file, localhost callback
+│   ├── mcp_tools.py         # shared MCP tool helpers: result text, OpenAI schema fix
 │   ├── gmail/               # integration.py, tools.py, auth, client, query builder, parser, login.py
 │   ├── calendar/            # auth, client, tools.py (approvals), login.py
 │   ├── todos/               # repo.py (table), service.py (rules), tools.py: local, no login
 │   ├── websearch/           # base.py (types), providers/ (serper, tavily, firecrawl), registry.py (+ fallback), tools.py
-│   └── swiggy/              # MCP OAuth, MCP client, tools.py (approval wrappers), login.py
+│   ├── swiggy/              # MCP client, tools.py (approval wrappers), login.py
+│   ├── zepto/               # MCP client, tools.py (approval rules), login.py
+│   └── groceries/           # compares Instamart and Zepto: providers/ per app, matching, search_groceries tool
 ├── interfaces/
 │   ├── cli.py               # terminal chat
 │   ├── telegram_bot.py      # Telegram bot
@@ -70,7 +74,7 @@ frontend/                    # React + Vite + TypeScript web UI
 
 ## Integrations are plugins
 
-Each integration (Gmail, Calendar, Todos, web search, Swiggy) is a self-contained folder whose `integration.py` declares everything about it: its tools, its section of the system prompt, its Integrations-page card and Connect flow, its CLI login, and its UI labels and examples. [registry.py](../butler/integrations/registry.py) lists them, and the agent, CLI, web UI and Telegram loop over that list. None of them name a specific integration.
+Each integration (Gmail, Calendar, Todos, web search, Swiggy, Zepto, grocery comparison) is a self-contained folder whose `integration.py` declares everything about it: its tools, its section of the system prompt, its Integrations-page card and Connect flow, its CLI login, and its UI labels and examples. [registry.py](../butler/integrations/registry.py) lists them, and the agent, CLI, web UI and Telegram loop over that list. None of them name a specific integration.
 
 Adding one is a folder plus one registry line; see [Adding tools → Add a new integration](internals/adding-tools.md#2-add-a-new-integration).
 

@@ -59,6 +59,10 @@ async def build_graph(on_note=print):
         if tools:
             loaded.append((integration, tools))
 
+    # An integration can replace other integrations' tools (see hides_tools)
+    hidden = set().union(*(i.hides_tools() for i, _ in loaded))
+    loaded = [(i, [t for t in tools if t.name not in hidden]) for i, tools in loaded]
+
     def toolset(pairs):
         return [tool for _, tools in pairs for tool in tools]
 

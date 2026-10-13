@@ -53,6 +53,13 @@ class Integration:
         """Static tool list, for integrations that need no async setup."""
         return []
 
+    def hides_tools(self) -> set[str]:
+        """Tools of OTHER integrations to keep from the LLM while this one is
+        loaded, because it replaces them (groceries' search_groceries replaces
+        each app's own product search). Only asked when this integration
+        loaded tools."""
+        return set()
+
     def rules(self, tool_names: set[str]) -> str:
         """This integration's section of the system prompt, given the tools that
         actually loaded. Only called when at least one of its tools loaded."""

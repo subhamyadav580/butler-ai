@@ -1,6 +1,6 @@
 # Butler
 
-**A self-hosted personal AI assistant for your Gmail, Google Calendar, todos, web search and Swiggy (Food, Instamart, Dineout).** You can chat with it in a **web UI**, on **Telegram**, or in your **terminal**.
+**A self-hosted personal AI assistant for your Gmail, Google Calendar, todos, web search, Swiggy (Food, Instamart, Dineout) and Zepto.** You can chat with it in a **web UI**, on **Telegram**, or in your **terminal**.
 
 ```
 You:    how many unread mails in Promotions, and what's 15% of 240?
@@ -39,6 +39,8 @@ Butler is open source and runs on your own machine. You connect **your own** acc
 | 🍔 **Swiggy Food** (India) | Restaurant and dish search, menus, cart, coupons, ordering, order tracking |
 | 🛒 **Swiggy Instamart** (India) | Groceries and essentials: product search, your usual items, cart, checkout, tracking |
 | 🍽️ **Swiggy Dineout** (India) | Find restaurants, check available tables, book free reservations |
+| 🥛 **Zepto** (India) | Groceries and essentials in minutes: product search, cart, ordering, reorders, order history |
+| ⚖️ **Grocery price comparison** | With Instamart and Zepto both connected, "order milk and bread" searches both and shows prices side by side, then orders from the app you pick |
 | 💬 **General questions** | Anything else, answered directly by the model, or with a web search when it needs current information |
 | ✋ **Asks before acting** | Shows a picker when you want to open an email, and asks you to **Approve/Reject** before placing an order, booking a table, or changing your account |
 
@@ -96,6 +98,8 @@ Butler already answers general questions at this point. To give it your mail and
 | Todos | Nothing to set up | [docs/integrations/todos.md](docs/integrations/todos.md) |
 | Web search | Add `SERPER_API_KEY`, `TAVILY_API_KEY` and/or `FIRECRAWL_API_KEY` to `.env` | [docs/integrations/web-search.md](docs/integrations/web-search.md) |
 | Swiggy | `python -m butler swiggy-login` (phone number + OTP) | [docs/integrations/swiggy.md](docs/integrations/swiggy.md) |
+| Zepto | `python -m butler zepto-login` (phone number + OTP) | [docs/integrations/zepto.md](docs/integrations/zepto.md) |
+| Grocery comparison | Nothing: on when Instamart and Zepto are both connected | [docs/integrations/groceries.md](docs/integrations/groceries.md) |
 
 You can also connect them from the **Integrations** page of the web UI.
 
@@ -105,7 +109,7 @@ The full walkthrough is in **[Getting started](docs/getting-started.md)**.
 
 - **[Getting started](docs/getting-started.md):** from zero to a working assistant, step by step
 - **Interfaces:** [Web UI](docs/interfaces/web.md) · [Telegram](docs/interfaces/telegram.md) · [Terminal](docs/interfaces/cli.md)
-- **Integrations:** [Gmail](docs/integrations/gmail.md) · [Google Calendar](docs/integrations/calendar.md) · [Todos](docs/integrations/todos.md) · [Web search](docs/integrations/web-search.md) · [Swiggy](docs/integrations/swiggy.md)
+- **Integrations:** [Gmail](docs/integrations/gmail.md) · [Google Calendar](docs/integrations/calendar.md) · [Todos](docs/integrations/todos.md) · [Web search](docs/integrations/web-search.md) · [Swiggy](docs/integrations/swiggy.md) · [Zepto](docs/integrations/zepto.md) · [Grocery comparison](docs/integrations/groceries.md)
 - **[Configuration](docs/configuration.md):** every `.env` setting
 - **[Troubleshooting](docs/troubleshooting.md):** common problems and fixes
 - **[Architecture](docs/architecture.md):** the overview of how it works
@@ -120,6 +124,7 @@ python -m butler chat           # terminal chat
 python -m butler gmail-login    # connect Gmail
 python -m butler calendar-login # connect Google Calendar
 python -m butler swiggy-login   # connect Swiggy (again every 5 days)
+python -m butler zepto-login    # connect Zepto
 python -m butler gmail updates --from linkedin --unread   # quick Gmail reader, no AI
 ```
 
@@ -132,13 +137,14 @@ Butler acts on **your** accounts, so treat it like a password manager:
 - **Secrets stay local.** `.env`, `secrets/` and `data/` (your saved chats and todos) are git-ignored and never leave your machine.
 - **The web UI is local by default.** It only listens on `127.0.0.1`. If you expose it, set `BUTLER_WEB_PASSWORD` and put HTTPS in front of it.
 - **Telegram is locked by default.** The bot answers nobody until you add your user ID to `TELEGRAM_ALLOWED_USER_IDS`.
-- **Risky actions need approval.** Orders, bookings, calendar changes, address changes and clearing a cart always ask first.
+- **Address first, approval always.** Any order starts by asking which address to deliver to. Orders, bookings, calendar changes, address changes and clearing a cart always ask first.
 
 ## Project status and limitations
 
 - **Agent memory is in-process:** web chats are saved (sidebar and transcripts survive restarts), but after a restart Butler doesn't remember the earlier context of a chat. Telegram and terminal chats aren't saved.
 - **Gmail:** sending is off until you switch it on, and never deletes or archives. **Calendar** covers your primary calendar only.
 - **Swiggy:** India only. Food, Instamart and Dineout are supported (not Scenes yet). Logins last 5 days, and Dineout paid deals and cancellations need the Swiggy app.
+- **Zepto:** India only, through Zepto's official MCP server. Orders are real; every order asks for Approve.
 - **Model choice:** works with `gpt-4o-mini`, but with everything enabled (60+ tools, most of them Swiggy) **`gpt-4.1-mini` is recommended**. It's much more reliable at carts and bookings. Set `OPENAI_MODEL`, or trim with `SWIGGY_SERVICES`.
 
 ## Contributing

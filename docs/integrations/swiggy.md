@@ -29,6 +29,10 @@ Book a free table for 2 at 8 pm                       ← asks you to Approve
 
 Butler chooses the service from what you ask for: a meal delivered means Food, groceries mean Instamart, and eating out means Dineout. Naming the service ("on Instamart") helps when it's ambiguous.
 
+**Address first:** for Food and Instamart, Butler asks which saved address to deliver to before searching or ordering, unless you've already said it.
+
+**Zepto connected too?** Then grocery requests that don't name an app search both Instamart and Zepto and compare prices; see [Grocery comparison](groceries.md).
+
 ## Connect
 
 No developer setup is needed. Just log in:

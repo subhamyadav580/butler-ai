@@ -123,7 +123,9 @@ class Chat:
         return {"email_id": emails[int(choice) - 1]["id"] if int(choice) else None}
 
     async def confirm(self, payload):
-        body = [Text(payload["details"])] if payload.get("details") else []
+        body = []
+        if payload.get("details"):
+            body.append(Markdown(payload["details"]) if payload.get("details_markdown") else Text(payload["details"]))
         if show_raw_args(payload):
             body.append(Text(format_args(payload["args"]), style="dim"))
         console.print(Panel(

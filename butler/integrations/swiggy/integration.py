@@ -16,8 +16,12 @@ COMMON_RULES = (
     "groceries and household essentials delivered in minutes, dineout_* = "
     "booking a table to eat out. Pick the service from what the user wants "
     "(a meal delivered → food; milk, snacks, groceries, household items → "
-    "instamart; going out, booking a table → dineout) and use only that "
-    "service's tools for the whole flow.\n"
+    "instamart, unless another grocery app is connected too: then follow "
+    "the Groceries rules; going out, booking a table → "
+    "dineout) and use only that service's tools for the whole flow.\n"
+    "- Delivery address first: before searching or ordering for delivery "
+    "(Food, Instamart), ask which saved address to deliver to, listing "
+    "their labels, unless the user already said it in this conversation.\n"
     "- There is NO widget, picker or button UI here: ignore tool text about "
     "widgets, tapping, or 'Proceed to payment'. The user replies in chat. "
     "Always write results out yourself (items, quantities, prices, totals, "
@@ -58,8 +62,8 @@ FOOD_RULES = (
 
 INSTAMART_RULES = (
     "Swiggy Instamart (instamart_*), groceries:\n"
-    "- (1) instamart_get_addresses → addressId. (2) instamart_search_products"
-    "(addressId, query). Results have variants (pack sizes, brands): pick "
+    "- (1) instamart_get_addresses → addressId of the address the user "
+    "chose. (2) {search}. Results have variants (pack sizes, brands): pick "
     "the one matching what the user asked for, and ask only if it's "
     "genuinely ambiguous. For 'my usual' or reorders, use "
     "instamart_your_go_to_items.\n"
@@ -147,8 +151,15 @@ class SwiggyIntegration(Integration):
 
     def rules(self, tool_names):
         services = services_of_names(tool_names)
+        search = (
+            "instamart_search_products(addressId, query)"
+            if "instamart_search_products" in tool_names
+            # another grocery app is connected: groceries' search_groceries searches both
+            else "search with search_groceries (apps=[\"instamart\"] when the user asked for Instamart)"
+        )
         return COMMON_RULES + "".join(
-            "\n" + SERVICE_RULES[s] for s in ("food", "instamart", "dineout") if s in services
+            "\n" + SERVICE_RULES[s].replace("{search}", search)
+            for s in ("food", "instamart", "dineout") if s in services
         )
 
     def status(self, loaded_tool_names):

@@ -34,6 +34,7 @@ Each terminal session is its own conversation, and it's forgotten when you quit.
 python -m butler gmail-login     # Google login in the browser
 python -m butler calendar-login  # Google Calendar
 python -m butler swiggy-login    # phone number + OTP in the browser
+python -m butler zepto-login     # phone number + OTP in the browser
 ```
 
 ## Quick Gmail reader (no AI)

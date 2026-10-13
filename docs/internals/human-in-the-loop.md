@@ -9,7 +9,7 @@ Code: [agent/human.py](../../butler/agent/human.py), the tools that raise interr
 | `type` | Raised by | Payload | Resume value |
 |---|---|---|---|
 | `pick_email` | `pick_email` tool | `question`, `emails: [{id, from, subject, snippet, unread, …}]` | `{"email_id": "<id>"}`, or `{"email_id": null}` to cancel |
-| `confirm_action` | Gmail `reply_to_email` and `send_email`, Calendar changes, `delete_todo`, and Swiggy tools in `NEEDS_APPROVAL` (Food, Instamart and Dineout orders, bookings, address changes, clearing carts) | `question` (for example "Book this table on Swiggy Dineout?"), `tool`, `args`, `details` (cart or booking preview) | `{"approved": true \| false}` |
+| `confirm_action` | Gmail `reply_to_email` and `send_email`, Calendar changes, `delete_todo`, and Swiggy tools in `NEEDS_APPROVAL` (Food, Instamart and Dineout orders, bookings, address changes, clearing carts), and Zepto orders (only with `confirmOrder=true`), new addresses and name changes (`ORDER_TOOLS` / `NEEDS_APPROVAL` in zepto/tools.py) | `question` (for example "Book this table on Swiggy Dineout?"), `tool`, `args`, `details` (cart or booking preview) | `{"approved": true \| false}` |
 
 ## How a pause works
 
@@ -90,6 +90,6 @@ The wording matters: an earlier "User did not pick an email" made the model apol
 - **Approval comes before the call.** For gated tools, the real MCP call happens only after `approved: true`.
 - **Rejection and silence are safe.** Rejecting, cancelling, or sending another message never runs the action.
 - **Stale buttons do nothing.** Both Telegram and the web check that the thread is still waiting for *that kind* of question. Otherwise, Telegram says "expired" and the API returns `409`.
-- **Group chats are covered.** In a Telegram group, only users allowed to use Swiggy can tap Approve.
+- **Group chats are covered.** In a Telegram group, only users allowed to use Swiggy and Zepto can tap Approve.
 
 To add a new kind of question, see [Adding tools: a new kind of question](adding-tools.md#6-add-a-new-kind-of-question).

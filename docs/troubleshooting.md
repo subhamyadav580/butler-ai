@@ -96,6 +96,20 @@ Instamart replaces the whole cart on every update. Butler is instructed to re-se
 **The login browser doesn't open, or `Address already in use` (port 8765)**
 Another Swiggy login is still running. Close it, or wait for it to time out, and try again.
 
+## Zepto
+
+**`WARNING: Zepto not connected … Continuing without Zepto.`**
+Not an error. Run `python -m butler zepto-login` to add it.
+
+**"Zepto login has expired"**
+Zepto logins normally refresh themselves. If the refresh was revoked (for example, you logged out of all devices), run `python -m butler zepto-login` again.
+
+**Butler asks "Zepto or Instamart?"**
+Both are connected and your message didn't say which. Name the app ("on Zepto") to skip the question.
+
+**The login browser doesn't open, or `Address already in use` (port 8766)**
+Another Zepto login is still running. Close it, or wait for it to time out, and try again.
+
 ## Web UI
 
 **The page shows `{"message": "Frontend not built…"}`**

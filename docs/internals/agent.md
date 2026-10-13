@@ -73,7 +73,7 @@ llm_full = llm.bind_tools(all_tools)                 # every loaded integration
 llm_open = llm.bind_tools(toolset(everyone))         # minus restricted ones
 ```
 
-Integrations marked `restricted = True` (Swiggy: orders on the owner's account) are only for some users. The `agent` node reads `config["configurable"]["allow_restricted"]` and picks the matching LLM and prompt sections. A Telegram user who isn't the owner never even *sees* restricted tools. As a second line of defence, Swiggy's tools also check the same flag before running, and restricted approvals carry `"restricted": True` so only the owner can answer them.
+Integrations marked `restricted = True` (Swiggy, Zepto: orders on the owner's account) are only for some users. The `agent` node reads `config["configurable"]["allow_restricted"]` and picks the matching LLM and prompt sections. A Telegram user who isn't the owner never even *sees* restricted tools. As a second line of defence, Swiggy's tools also check the same flag before running, and restricted approvals carry `"restricted": True` so only the owner can answer them.
 
 ## The model
 
