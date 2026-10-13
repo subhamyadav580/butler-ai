@@ -4,6 +4,12 @@ Code: [butler/agent/graph.py](../../butler/agent/graph.py), [butler/agent/prompt
 
 ## The graph
 
+<p align="center"><img src="../images/agent-graph.png" alt="The compiled LangGraph: start, agent, tools, end" width="220"></p>
+
+That's the compiled graph as LangGraph draws it (`graph.get_graph().draw_mermaid_png()`). With the tools, the human-in-the-loop pauses and the memory added:
+
+![Butler's agent with every integration's tools, human in the loop and the checkpointer](../images/agent-graph-detailed.png)
+
 ```
         ┌──────────────────────────────┐
 START → │ agent  (LLM with tools bound) │ ──── no tool calls ───► END
