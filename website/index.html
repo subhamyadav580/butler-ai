@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Butler: your self-hosted AI assistant</title>
+  <meta name="description" content="An open-source, self-hosted AI assistant for Gmail, Google Calendar, todos, web search, Swiggy and Zepto. Chat on the web, Telegram or your terminal. Nothing happens without your approval.">
+  <meta name="theme-color" content="#c2410c">
+
+  <!-- Link previews (WhatsApp, X, LinkedIn, Slack) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Butler: your self-hosted AI assistant">
+  <meta property="og:description" content="Mail, calendar, todos, web search, food and groceries in one chat. Open source, runs on your machine, asks before it acts.">
+  <meta property="og:url" content="https://subhamyadav580.github.io/butler-ai/">
+  <meta property="og:image" content="https://subhamyadav580.github.io/butler-ai/assets/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c2410c'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'>B</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top"><span class="logo">B</span> Butler</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#groceries">Groceries</a>
+      <a href="#interfaces">Interfaces</a>
+      <a href="#how">How it works</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="icon-btn" id="theme-toggle" aria-label="Switch light/dark theme" title="Switch theme">◐</button>
+      <a class="btn btn-small" href="https://github.com/subhamyadav580/butler-ai">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy reveal">
+        <p class="eyebrow">Open source · Self-hosted · MIT</p>
+        <h1>Your personal AI assistant that <span class="accent">asks before it acts.</span></h1>
+        <p class="lead">Butler reads your mail, runs your calendar and todo list, searches the web, and orders food and groceries, all from one chat. It runs on your own machine, with your own accounts.</p>
+        <div class="prompt" aria-hidden="true"><span class="prompt-label">You</span><span id="typed"></span><span class="caret"></span></div>
+        <div class="hero-actions">
+          <a class="btn" href="https://github.com/subhamyadav580/butler-ai">View on GitHub</a>
+          <a class="btn btn-ghost" href="#features">See what it does</a>
+        </div>
+      </div>
+      <figure class="hero-shot reveal">
+        <img src="assets/butler-demo.gif" alt="Butler in the web UI answering from Gmail and Calendar, opening an email from a picker, and asking for approval before sending a reply" width="960" height="600">
+      </figure>
+    </div>
+  </section>
+
+  <!-- Example prompts -->
+  <section class="section" id="features">
+    <div class="wrap">
+      <h2 class="reveal">Just ask</h2>
+      <p class="section-lead reveal">One agent with every tool. It picks the right ones, and can use several in one answer.</p>
+      <div class="cards">
+        <article class="card reveal"><span class="card-icon">📬</span><h3>Mail</h3><p>"How many unread mails in Primary? Open the one from Ankit."</p></article>
+        <article class="card reveal"><span class="card-icon">📅</span><h3>Calendar</h3><p>"What's on tomorrow? Block 30 minutes on Friday at 4 for a call."</p></article>
+        <article class="card reveal"><span class="card-icon">☑️</span><h3>Todos</h3><p>"Remind me to pay rent on Friday, it's important."</p></article>
+        <article class="card reveal"><span class="card-icon">🔎</span><h3>Web search</h3><p>"What's the score in India vs Australia?" Answers cite their sources.</p></article>
+        <article class="card reveal"><span class="card-icon">🥛</span><h3>Groceries</h3><p>"Order milk, bread and eggs, wherever it's cheaper."</p></article>
+        <article class="card reveal"><span class="card-icon">🍔</span><h3>Food</h3><p>"Find veg biryani near my office and add it to my cart."</p></article>
+        <article class="card reveal"><span class="card-icon">🍽️</span><h3>Dine out</h3><p>"Book a table for 2 tonight in Indiranagar."</p></article>
+        <article class="card reveal"><span class="card-icon">✉️</span><h3>Replies</h3><p>"Reply to Ankit: Friday at 8 works." Shown to you before it's sent.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Integrations -->
+  <section class="section section-alt">
+    <div class="wrap">
+      <h2 class="reveal">Connects to the apps you use every day</h2>
+      <p class="section-lead reveal">Each integration is a plugin: a folder plus one line in a registry. Connect your own accounts from the Integrations page.</p>
+      <ul class="integrations reveal">
+        <li><span>📬</span><strong>Gmail</strong><small>Read, search, reply</small></li>
+        <li><span>📅</span><strong>Google Calendar</strong><small>Events, free time, Meet</small></li>
+        <li><span>☑️</span><strong>Todos</strong><small>Built in, no setup</small></li>
+        <li><span>🔎</span><strong>Web search</strong><small>Serper · Tavily · Firecrawl</small></li>
+        <li><span>🍔</span><strong>Swiggy</strong><small>Food · Instamart · Dineout</small></li>
+        <li><span>🥛</span><strong>Zepto</strong><small>Groceries in minutes</small></li>
+      </ul>
+      <figure class="shot shot-wide reveal">
+        <img src="assets/web-integrations.png" alt="The Integrations page: Gmail with an Allow replying and sending switch, Google Calendar, Todos, and Web search with per-provider switches" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <!-- Grocery comparison -->
+  <section class="section" id="groceries">
+    <div class="wrap split">
+      <div class="split-copy reveal">
+        <p class="eyebrow">Standout feature</p>
+        <h2>Compares Instamart and Zepto for you</h2>
+        <p>Ask for groceries without naming an app, and Butler searches both at your delivery address, then puts the same products side by side.</p>
+        <ul class="ticks">
+          <li>Matches the same brand and pack size on each app</li>
+          <li>Per-unit prices, so different pack sizes still compare fairly</li>
+          <li>Basket totals and which app is cheaper</li>
+          <li>Asks your delivery address first, and you pick the app</li>
+        </ul>
+      </div>
+      <figure class="shot reveal">
+        <img src="assets/grocery-compare.png" alt="Butler comparing milk, bread and eggs on Swiggy Instamart and Zepto, with totals: Zepto is cheaper by 6 rupees" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <!-- Approvals -->
+  <section class="section section-alt">
+    <div class="wrap split split-reverse">
+      <div class="split-copy reveal">
+        <p class="eyebrow">Safety first</p>
+        <h2>Nothing happens without your Approve</h2>
+        <p>Sending an email, placing an order, booking a table, changing your calendar: Butler pauses and shows you exactly what will happen.</p>
+        <ul class="ticks">
+          <li>Every reply and new email shows To, Subject and the full text</li>
+          <li>Orders show the app's own preview: items, total, address</li>
+          <li>Sending mail is off until you switch it on</li>
+          <li>Reject, or just type something else, and nothing changes</li>
+        </ul>
+      </div>
+      <figure class="shot reveal">
+        <img src="assets/approval-card.png" alt="An approval card asking 'Send this reply?' with the recipient, subject and text, and Approve and Reject buttons" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <!-- Interfaces -->
+  <section class="section" id="interfaces">
+    <div class="wrap">
+      <h2 class="reveal">Three ways to talk to it</h2>
+      <p class="section-lead reveal">The same agent behind all three. Use whichever is closest.</p>
+      <div class="interfaces">
+        <article class="iface reveal">
+          <div class="iface-head"><span>🌐</span><h3>Web UI</h3></div>
+          <p>Streaming answers, saved chats, pickers and approval cards, a Todos page, light and dark mode, and it works on your phone.</p>
+          <img src="assets/chat-answer.png" alt="The web UI answering how many unread mails there are and what's on the calendar tomorrow" loading="lazy">
+        </article>
+        <article class="iface reveal">
+          <div class="iface-head"><span>⌨️</span><h3>Terminal</h3></div>
+          <p>Live Markdown replies, numbered email pickers and highlighted approval prompts, right in your shell.</p>
+          <img src="assets/cli.svg" alt="Butler in the terminal: a calendar answer, an email picker, and an approval before sending a reply" loading="lazy">
+        </article>
+        <article class="iface reveal">
+          <div class="iface-head"><span>✈️</span><h3>Telegram</h3></div>
+          <p>Your assistant on your phone, anywhere. Inline buttons for pickers and approvals.</p>
+          <ul class="ticks small">
+            <li>Locked by default: only user IDs you allow</li>
+            <li>Orders and payments only for the owner</li>
+            <li>Same tools as the web and terminal</li>
+            <li>Type yes / no, or tap ✅ Approve / ❌ Reject</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section section-alt" id="how">
+    <div class="wrap how">
+      <div class="split-copy reveal">
+        <p class="eyebrow">Under the hood</p>
+        <h2>One LangGraph agent, 80+ tools</h2>
+        <p>An LLM in a loop with every integration's tools. When a tool needs you, the graph pauses with <code>interrupt()</code> and resumes with your answer.</p>
+        <ul class="ticks">
+          <li><strong>LangGraph</strong> agent with human-in-the-loop</li>
+          <li><strong>MCP</strong> for Swiggy and Zepto, with OAuth 2.1 + PKCE</li>
+          <li><strong>FastAPI</strong> backend, streaming over Server-Sent Events</li>
+          <li><strong>React + Vite</strong> web UI · <strong>python-telegram-bot</strong> · <strong>rich</strong> terminal</li>
+          <li><strong>SQLite</strong> for chats and todos</li>
+        </ul>
+        <div class="badges">
+          <span>Python</span><span>LangGraph</span><span>LangChain</span><span>MCP</span><span>FastAPI</span><span>React</span><span>TypeScript</span><span>SQLite</span>
+        </div>
+      </div>
+      <figure class="shot shot-plain shot-diagram reveal">
+        <img src="assets/agent-graph-detailed.png" alt="Diagram: you talk to the agent node, which calls the tools node with 86 tools across Gmail, Calendar, Todos, Web search, Swiggy, Zepto and Groceries; tools can pause for a human approval" loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <!-- Privacy -->
+  <section class="section">
+    <div class="wrap">
+      <h2 class="reveal">Private by design</h2>
+      <div class="pillars">
+        <div class="pillar reveal"><span>🏠</span><h3>Runs on your machine</h3><p>No Butler server and no account to create. You clone it and run it.</p></div>
+        <div class="pillar reveal"><span>🔑</span><h3>Your own logins</h3><p>You connect your own Google, Swiggy and Zepto accounts. Tokens stay in a local <code>secrets/</code> folder.</p></div>
+        <div class="pillar reveal"><span>🔒</span><h3>Locked down by default</h3><p>The web UI listens on localhost, Telegram answers nobody until you allow them, and mail sending starts off.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Closing call to action -->
+  <section class="section cta">
+    <div class="wrap cta-inner reveal">
+      <h2>Make it yours</h2>
+      <p>Butler is open source under the MIT license. Clone it, connect your accounts, or add an integration of your own.</p>
+      <div class="code">
+        <pre><code>git clone https://github.com/subhamyadav580/butler-ai.git
+cd butler-ai
+python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -e .
+cp .env.example .env      # add your OPENAI_API_KEY
+python -m butler chat</code></pre>
+        <button class="copy" data-copy="git clone https://github.com/subhamyadav580/butler-ai.git&#10;cd butler-ai&#10;python -m venv .venv &amp;&amp; source .venv/bin/activate&#10;pip install -e .&#10;cp .env.example .env&#10;python -m butler chat">Copy</button>
+      </div>
+      <p class="small-note">Then connect Gmail, Calendar, Swiggy or Zepto: the <a href="https://github.com/subhamyadav580/butler-ai#readme">README</a> walks you through it.</p>
+      <a class="btn" href="https://github.com/subhamyadav580/butler-ai">Star on GitHub</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <span><span class="logo logo-small">B</span> Butler · MIT License</span>
+    <span>Screenshots are of the real app with sample data.</span>
+    <a href="https://github.com/subhamyadav580/butler-ai">github.com/subhamyadav580/butler-ai</a>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

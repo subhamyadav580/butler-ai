@@ -22,6 +22,8 @@ You:    book a free table for 2 at Brewtally Honest tomorrow at 7 pm
 Butler: ⚠️ Book this table on Swiggy Dineout?  Guests: 2 · Sun 11 Oct, 7:00 PM   [Approve] [Reject]
 ```
 
+**Website:** [subhamyadav580.github.io/butler-ai](https://subhamyadav580.github.io/butler-ai/)
+
 Butler is open source and runs on your own machine. You connect **your own** accounts, and your tokens stay in a local `secrets/` folder.
 
 <p align="center">
