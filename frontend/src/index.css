@@ -78,9 +78,21 @@ pre {
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-weight: 700;
   font-size: 1.15rem;
   letter-spacing: -0.01em;
+}
+
+.logo {
+  flex: none;
+  display: block;
+}
+
+.empty .logo {
+  margin: 0 auto 14px;
 }
 
 .threads {

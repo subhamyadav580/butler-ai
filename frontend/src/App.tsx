@@ -5,6 +5,7 @@ import { Integrations } from './components/Integrations'
 import { Login } from './components/Login'
 import { Todos } from './components/Todos'
 import { useThreads } from './hooks/useThreads'
+import { Logo } from './components/Logo'
 
 type View = 'chat' | 'todos' | 'integrations'
 type AuthState = 'checking' | 'needs_login' | 'ok'
@@ -54,7 +55,9 @@ export default function App() {
     <div className="app">
       {sidebarOpen && <div className="backdrop" onClick={() => setSidebarOpen(false)} aria-hidden />}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <div className="brand">Butler</div>
+        <div className="brand">
+          <Logo /> Butler
+        </div>
         <button
           className="btn primary block"
           onClick={() => {

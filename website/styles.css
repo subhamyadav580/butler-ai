@@ -98,11 +98,9 @@ p { margin: 0; }
 }
 .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; text-decoration: none; }
-.logo {
-  display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 9px;
-  background: var(--accent); color: var(--accent-text); font-weight: 800;
-}
-.logo-small { width: 22px; height: 22px; border-radius: 6px; font-size: 0.8rem; vertical-align: middle; }
+.logo { width: 32px; height: 32px; display: block; }
+.logo-small { width: 22px; height: 22px; }
+.footer-brand { display: inline-flex; align-items: center; gap: 8px; }
 .nav-links { display: flex; gap: 26px; }
 .nav-links a { text-decoration: none; color: var(--muted); font-weight: 500; font-size: 0.95rem; }
 .nav-links a:hover { color: var(--text); }

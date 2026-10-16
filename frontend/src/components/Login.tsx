@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import * as api from '../api'
+import { Logo } from './Logo'
 
 export function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
   const [password, setPassword] = useState('')
@@ -23,7 +24,9 @@ export function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
   return (
     <div className="login">
       <form className="login-card" onSubmit={submit}>
-        <h1>Butler</h1>
+        <h1 className="brand">
+          <Logo size={34} /> Butler
+        </h1>
         <p className="muted">Enter the password set in BUTLER_WEB_PASSWORD.</p>
         <input
           type="password"

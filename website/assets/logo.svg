@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Butler">
+  <rect width="64" height="64" rx="15" fill="#c2410c"/>
+  <g fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round">
+    <path d="M11 21.5 L27.5 29 L27.5 35 L11 42.5 Z"/>
+    <path d="M53 21.5 L36.5 29 L36.5 35 L53 42.5 Z"/>
+  </g>
+  <rect x="26.5" y="26.5" width="11" height="11" rx="3.5" fill="#fff" stroke="#c2410c" stroke-width="2"/>
+</svg>

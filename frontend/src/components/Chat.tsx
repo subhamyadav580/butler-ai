@@ -5,6 +5,7 @@ import { ApprovalCard } from './ApprovalCard'
 import { Composer } from './Composer'
 import { EmailPicker } from './EmailPicker'
 import { Markdown } from './Markdown'
+import { Logo } from './Logo'
 
 const EMPTY_META: Meta = { tool_labels: {}, examples: [] }
 
@@ -130,6 +131,7 @@ export function Chat({ threadId, onSent, onTurnFinished, onUnauthorized }: Props
       <div className="messages">
         {empty && (
           <div className="empty">
+            <Logo size={52} />
             <h1>How can I help?</h1>
             <p>Ask me anything, or about your own mail, calendar, todos and more. Try one of these:</p>
             <div className="examples">
